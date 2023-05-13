@@ -20,13 +20,13 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	if _, valid := app.validAccount(w, r, input.SourceAccountID, input.Currency); !valid {
-		app.badRequestResponse(w, r, err)
+	err = app.validAccount(w, r, input.SourceAccountID, input.Currency)
+	if err != nil {
 		return
 	}
 
-	if _, valid := app.validAccount(w, r, input.TargetAccountID, input.Currency); !valid {
-		app.badRequestResponse(w, r, err)
+	err = app.validAccount(w, r, input.TargetAccountID, input.Currency)
+	if err != nil {
 		return
 	}
 
@@ -48,20 +48,20 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) validAccount(w http.ResponseWriter, r *http.Request, accountID int64, currency string) (*data.Account, bool) {
+func (app *application) validAccount(w http.ResponseWriter, r *http.Request, accountID int64, currency string) error {
 	account, err := app.models.Accounts.Get(accountID)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, "One or more of the accounts does not exist")
-		return nil, false
+		return err
 	}
 
 	if account.Currency != currency {
 		// TODO: Implement currency conversion
 		app.errorResponse(w, r, http.StatusBadRequest, "Account currency mismatch")
-		return account, false
+		return err
 	}
 
-	return account, true
+	return err
 }
 
 func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {
