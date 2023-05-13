@@ -10,6 +10,7 @@ type TransferTxParams struct {
 	SourceAccountID int64   `json:"source_account_id"`
 	TargetAccountID int64   `json:"target_account_id"`
 	Amount          float64 `json:"amount"`
+	Currency        string  `json:"currency"`
 }
 
 type TransferTxResult struct {
@@ -25,6 +26,18 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 	sourceAccount, err := app.models.Accounts.Get(arg.SourceAccountID)
 	if err != nil {
 		return nil, err
+	}
+
+	if sourceAccount.Currency != arg.Currency {
+		convertedAmount, err := app.currencyConvertion(sourceAccount.Currency, arg.Currency, arg.Amount)
+		if err != nil {
+			return nil, errors.New("could not convert currency")
+		}
+		a, err := app.toFloat64(convertedAmount)
+		if err != nil {
+			return nil, err
+		}
+		arg.Amount = a
 	}
 
 	if sourceAccount.Balance < arg.Amount {

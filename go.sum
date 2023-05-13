@@ -1,4 +1,8 @@
+github.com/disiqueira/gocurrency v0.0.0-20170319121158-085df9aea731 h1:kPggTMiR5XD7a0nivho77l5Fwf4f2bEK9tQwoPYOYhE=
+github.com/disiqueira/gocurrency v0.0.0-20170319121158-085df9aea731/go.mod h1:qU/ayE5Wtx9wxgk78oOOqEwQdbmjboPApXNO2Cu/NSU=
 github.com/go-chi/chi/v5 v5.0.8 h1:lD+NLqFcAi1ovnVZpsnObHGW4xb4J8lNmoYVfECH1Y0=
 github.com/go-chi/chi/v5 v5.0.8/go.mod h1:DslCQbL2OYiznFReuXYUmQ2hGd1aDpCnlMNITLSKoi8=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/shopspring/decimal v1.3.1 h1:2Usl1nmF/WZucqkFZhnfFYxxxu8LG21F6nPQBE5gKV8=
+github.com/shopspring/decimal v1.3.1/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=

@@ -4,7 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/disiqueira/gocurrency"
 	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/shopspring/decimal"
 )
 
 func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +36,7 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		SourceAccountID: input.SourceAccountID,
 		TargetAccountID: input.TargetAccountID,
 		Amount:          input.Amount,
+		Currency:        input.Currency,
 	}
 
 	result, err := app.TransferTx(arg)
@@ -49,19 +52,13 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) validAccount(w http.ResponseWriter, r *http.Request, accountID int64, currency string) error {
-	account, err := app.models.Accounts.Get(accountID)
+	_, err := app.models.Accounts.Get(accountID)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, "One or more of the accounts does not exist")
 		return err
 	}
 
-	if account.Currency != currency {
-		// TODO: Implement currency conversion
-		app.errorResponse(w, r, http.StatusBadRequest, "Account currency mismatch")
-		return err
-	}
-
-	return err
+	return nil
 }
 
 func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {
@@ -80,4 +77,17 @@ func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+func (app *application) currencyConvertion(sourceCurrency, targetCurrency string, amount float64) (decimal.Decimal, error) {
+	sourceCur := gocurrency.NewCurrency(sourceCurrency)
+	targetCur := gocurrency.NewCurrency(targetCurrency)
+	a := decimal.NewFromFloat(amount)
+
+	resultAmount, err := gocurrency.ConvertCurrency(sourceCur, targetCur, a)
+	if err != nil {
+		return decimal.Decimal{}, err
+	}
+
+	return resultAmount, nil
 }
