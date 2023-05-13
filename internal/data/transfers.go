@@ -17,20 +17,23 @@ type TransferModel struct {
 	DB *sql.DB
 }
 
-func (t TransferModel) Insert(tx *Transfer) error {
+func (t TransferModel) Insert(tx Transfer) (Transfer, error) {
 	query := `
 		INSERT INTO transfers (source_account_id, target_account_id, amount, currency)
 		VALUES ($1, $2, $3)
 		RETURNING id, source_account_id, target_account_id, amount, currency`
 
 	args := []any{tx.SourceAccountID, tx.TargetAccountID, tx.Amount, tx.Currency}
-	return t.DB.QueryRow(query, args...).Scan(
-		&tx.ID,
-		&tx.SourceAccountID,
-		&tx.TargetAccountID,
-		&tx.Amount,
-		&tx.Currency,
+	var transfer Transfer
+	err := t.DB.QueryRow(query, args...).Scan(
+		&transfer.ID,
+		&transfer.SourceAccountID,
+		&transfer.TargetAccountID,
+		&transfer.Amount,
+		&transfer.Currency,
 	)
+
+	return transfer, err
 }
 
 func (t TransferModel) Get(id int64) (*Transfer, error) {

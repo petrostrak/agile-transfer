@@ -66,7 +66,12 @@ func (a AccountModel) Update(account *Account) error {
 
 	args := []any{account.Balance, account.ID}
 
-	return a.DB.QueryRow(query, args...).Scan(&account.ID, &account.Balance, &account.Currency, &account.CreatedAt)
+	return a.DB.QueryRow(query, args...).Scan(
+		&account.ID,
+		&account.Balance,
+		&account.Currency,
+		&account.CreatedAt,
+	)
 }
 
 func (a AccountModel) Delete(id int64) error {
@@ -93,4 +98,38 @@ func (a AccountModel) Delete(id int64) error {
 	}
 
 	return nil
+}
+
+func (a AccountModel) AddAccountBalance(id int64, amount float64) (Account, error) {
+	query := `
+		UPDATE accounts
+		SET balance = balance + $1
+		WHERE id = $2
+		RETURNING id, balance, currency, created_at`
+
+	args := []any{amount, id}
+
+	var account Account
+	err := a.DB.QueryRow(query, args...).Scan(
+		&account.ID,
+		&account.Balance,
+		&account.Currency,
+		&account.CreatedAt,
+	)
+
+	return account, err
+}
+
+func (a AccountModel) AddMoney(sourceAccountID int64, sourceAccountAmount float64, targetAccountID int64, targetAccountAmount float64) (sourceAccount, targetAccount Account, err error) {
+	sourceAccount, err = a.AddAccountBalance(sourceAccountID, sourceAccountAmount)
+	if err != nil {
+		return
+	}
+
+	targetAccount, err = a.AddAccountBalance(targetAccountID, targetAccountAmount)
+	if err != nil {
+		return
+	}
+
+	return
 }
