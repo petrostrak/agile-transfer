@@ -100,6 +100,35 @@ func (a AccountModel) Delete(id int64) error {
 	return nil
 }
 
+func (a AccountModel) GetAll() ([]Account, error) {
+	query := `
+		SELECT id, balance, currency, created_at
+		FROM accounts
+		ORDER BY id`
+
+	rows, err := a.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []Account
+	for rows.Next() {
+		var account Account
+		if err := rows.Scan(
+			&account.ID,
+			&account.Balance,
+			&account.Currency,
+			&account.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
 func (a AccountModel) AddAccountBalance(id int64, amount float64) (Account, error) {
 	query := `
 		UPDATE accounts

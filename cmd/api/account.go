@@ -132,3 +132,21 @@ func (app *application) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+func (app *application) getAllAccounts(w http.ResponseWriter, r *http.Request) {
+	accounts, err := app.models.Accounts.GetAll()
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"accounts": accounts}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
