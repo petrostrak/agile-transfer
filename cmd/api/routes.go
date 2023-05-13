@@ -17,6 +17,7 @@ func (app *application) routes() http.Handler {
 		r.Delete("/{id}", app.deleteAccount)
 	})
 	r.Post("/transfer", app.createTransfer)
+	r.Get("/transactions", app.getAllTransfers)
 
 	return r
 }

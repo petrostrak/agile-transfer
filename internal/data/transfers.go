@@ -64,3 +64,33 @@ func (t TransferModel) Get(id int64) (*Transfer, error) {
 	}
 	return &tx, nil
 }
+
+func (t TransferModel) GetAll() ([]Transfer, error) {
+	query := `
+			SELECT id, source_account_id, target_account_id, amount, currency
+			FROM transfers
+			ORDER BY id`
+
+	rows, err := t.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transfers []Transfer
+	for rows.Next() {
+		var transfer Transfer
+		if err := rows.Scan(
+			&transfer.ID,
+			&transfer.SourceAccountID,
+			&transfer.TargetAccountID,
+			&transfer.Amount,
+			&transfer.Currency,
+		); err != nil {
+			return nil, err
+		}
+		transfers = append(transfers, transfer)
+	}
+
+	return transfers, nil
+}

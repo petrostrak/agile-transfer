@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/petrostrak/agile-transfer/internal/data"
@@ -61,4 +62,22 @@ func (app *application) validAccount(w http.ResponseWriter, r *http.Request, acc
 	}
 
 	return account, true
+}
+
+func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {
+	transfers, err := app.models.Transfers.GetAll()
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"transfers": transfers}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
