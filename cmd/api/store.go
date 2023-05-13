@@ -21,15 +21,6 @@ type TransferTxResult struct {
 func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
 	var err error
-	trasfer := data.Transfer{
-		SourceAccountID: arg.SourceAccountID,
-		TargetAccountID: arg.TargetAccountID,
-		Amount:          arg.Amount,
-	}
-	result.Transfer, err = app.models.Transfers.Insert(trasfer)
-	if err != nil {
-		return &result, err
-	}
 
 	sourceAccount, err := app.models.Accounts.Get(arg.SourceAccountID)
 	if err != nil {
@@ -40,6 +31,19 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 		return nil, errors.New("insufficient balance")
 	} else {
 		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, -arg.Amount, arg.TargetAccountID, arg.Amount)
+		if err != nil {
+			return &result, err
+		}
+
+		trasfer := data.Transfer{
+			SourceAccountID: arg.SourceAccountID,
+			TargetAccountID: arg.TargetAccountID,
+			Amount:          arg.Amount,
+		}
+		result.Transfer, err = app.models.Transfers.Insert(trasfer)
+		if err != nil {
+			return &result, err
+		}
 	}
 
 	return &result, err

@@ -20,7 +20,7 @@ type TransferModel struct {
 func (t TransferModel) Insert(tx Transfer) (Transfer, error) {
 	query := `
 		INSERT INTO transfers (source_account_id, target_account_id, amount, currency)
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, source_account_id, target_account_id, amount, currency`
 
 	args := []any{tx.SourceAccountID, tx.TargetAccountID, tx.Amount, tx.Currency}
