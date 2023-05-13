@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/shopspring/decimal"
 )
 
 type TransferTxParams struct {
-	SourceAccountID int64   `json:"source_account_id"`
-	TargetAccountID int64   `json:"target_account_id"`
-	Amount          float64 `json:"amount"`
-	Currency        string  `json:"currency"`
+	SourceAccountID int64           `json:"source_account_id"`
+	TargetAccountID int64           `json:"target_account_id"`
+	Amount          decimal.Decimal `json:"amount"`
+	Currency        string          `json:"currency"`
 }
 
 type TransferTxResult struct {
@@ -33,17 +34,14 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 		if err != nil {
 			return nil, errors.New("could not convert currency")
 		}
-		a, err := app.toFloat64(convertedAmount)
-		if err != nil {
-			return nil, err
-		}
-		arg.Amount = a
+
+		arg.Amount = convertedAmount
 	}
 
-	if sourceAccount.Balance < arg.Amount {
+	if !sourceAccount.Balance.GreaterThan(arg.Amount) {
 		return nil, errors.New("insufficient balance")
 	} else {
-		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, -arg.Amount, arg.TargetAccountID, arg.Amount)
+		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.Amount.Neg(), arg.TargetAccountID, arg.Amount)
 		if err != nil {
 			return &result, err
 		}

@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/shopspring/decimal"
 )
 
 func (app *application) createAccount(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Balance  float64 `json:"balance"`
-		Currency string  `json:"currency"`
+		Balance  decimal.Decimal `json:"balance"`
+		Currency string          `json:"currency"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -82,8 +83,8 @@ func (app *application) updateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		Balance  *float64 `json:"balance"`
-		Currency *string  `json:"currency"`
+		Balance  *decimal.Decimal `json:"balance"`
+		Currency *string          `json:"currency"`
 	}
 
 	err = app.readJSON(w, r, &input)

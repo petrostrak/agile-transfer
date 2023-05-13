@@ -11,10 +11,10 @@ import (
 
 func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		SourceAccountID int64   `json:"source_account_id"`
-		TargetAccountID int64   `json:"target_account_id"`
-		Amount          float64 `json:"amount"`
-		Currency        string  `json:"currency"`
+		SourceAccountID int64           `json:"source_account_id"`
+		TargetAccountID int64           `json:"target_account_id"`
+		Amount          decimal.Decimal `json:"amount"`
+		Currency        string          `json:"currency"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -79,12 +79,11 @@ func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) currencyConvertion(sourceCurrency, targetCurrency string, amount float64) (decimal.Decimal, error) {
+func (app *application) currencyConvertion(sourceCurrency, targetCurrency string, amount decimal.Decimal) (decimal.Decimal, error) {
 	sourceCur := gocurrency.NewCurrency(sourceCurrency)
 	targetCur := gocurrency.NewCurrency(targetCurrency)
-	a := decimal.NewFromFloat(amount)
 
-	resultAmount, err := gocurrency.ConvertCurrency(sourceCur, targetCur, a)
+	resultAmount, err := gocurrency.ConvertCurrency(sourceCur, targetCur, amount)
 	if err != nil {
 		return decimal.Decimal{}, err
 	}

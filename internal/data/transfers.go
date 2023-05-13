@@ -3,14 +3,16 @@ package data
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 type Transfer struct {
-	ID              int64   `json:"id"`
-	SourceAccountID int64   `json:"source_account_id"`
-	TargetAccountID int64   `json:"target_account_id"`
-	Amount          float64 `json:"amount"`
-	Currency        string  `json:"currency"`
+	ID              int64           `json:"id"`
+	SourceAccountID int64           `json:"source_account_id"`
+	TargetAccountID int64           `json:"target_account_id"`
+	Amount          decimal.Decimal `json:"amount"`
+	Currency        string          `json:"currency"`
 }
 
 type TransferModel struct {

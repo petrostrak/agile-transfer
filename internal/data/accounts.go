@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type Account struct {
-	ID        int64     `json:"id"`
-	Balance   float64   `json:"balance"`
-	Currency  string    `json:"currency"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int64           `json:"id"`
+	Balance   decimal.Decimal `json:"balance"`
+	Currency  string          `json:"currency"`
+	CreatedAt time.Time       `json:"created_at"`
 }
 
 type AccountModel struct {
@@ -129,7 +131,7 @@ func (a AccountModel) GetAll() ([]Account, error) {
 	return accounts, nil
 }
 
-func (a AccountModel) AddAccountBalance(id int64, amount float64) (Account, error) {
+func (a AccountModel) AddAccountBalance(id int64, amount decimal.Decimal) (Account, error) {
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
@@ -149,7 +151,7 @@ func (a AccountModel) AddAccountBalance(id int64, amount float64) (Account, erro
 	return account, err
 }
 
-func (a AccountModel) AddMoney(sourceAccountID int64, sourceAccountAmount float64, targetAccountID int64, targetAccountAmount float64) (sourceAccount, targetAccount Account, err error) {
+func (a AccountModel) AddMoney(sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount Account, err error) {
 	sourceAccount, err = a.AddAccountBalance(sourceAccountID, sourceAccountAmount)
 	if err != nil {
 		return
