@@ -1,0 +1,17 @@
+version: "3.3"
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: agile_transfer_docker
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=agile_transfer
+    restart: always
+    ports:
+      - 0.0.0.0:5432:5432
+    volumes:
+          # copy the sql script to drop tables
+          - ./db/migration/000001_init_schema.down.sql:/docker-entrypoint-initdb.d/migrationdown.sql
+          # copy the sql script to create tables
+          - ./db/migration/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/migrationup.sql
