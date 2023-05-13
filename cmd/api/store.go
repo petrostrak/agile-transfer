@@ -29,8 +29,13 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 		return nil, err
 	}
 
-	if sourceAccount.Currency != arg.Currency {
-		convertedAmount, err := app.currencyConvertion(sourceAccount.Currency, arg.Currency, arg.Amount)
+	targetAccount, err := app.models.Accounts.Get(arg.TargetAccountID)
+	if err != nil {
+		return nil, err
+	}
+
+	if sourceAccount.Currency != targetAccount.Currency {
+		convertedAmount, err := app.currencyConvertion(arg.Currency, targetAccount.Currency, arg.Amount)
 		if err != nil {
 			return nil, errors.New("could not convert currency")
 		}

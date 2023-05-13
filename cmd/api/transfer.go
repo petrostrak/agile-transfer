@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
-	"github.com/disiqueira/gocurrency"
+	currconv "github.com/kitloong/go-currency-converter-api/v2"
 	"github.com/petrostrak/agile-transfer/internal/data"
 	"github.com/shopspring/decimal"
 )
@@ -79,14 +80,27 @@ func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) currencyConvertion(sourceCurrency, targetCurrency string, amount decimal.Decimal) (decimal.Decimal, error) {
-	sourceCur := gocurrency.NewCurrency(sourceCurrency)
-	targetCur := gocurrency.NewCurrency(targetCurrency)
+func (app *application) currencyConvertion(from, to string, amount decimal.Decimal) (decimal.Decimal, error) {
+	// fromCurrency := gocurrency.NewCurrency(from)
+	// toCurrency := gocurrency.NewCurrency(to)
 
-	resultAmount, err := gocurrency.ConvertCurrency(sourceCur, targetCur, amount)
+	// resultAmount, err := gocurrency.ConvertCurrency(fromCurrency, toCurrency, amount)
+	// if err != nil {
+	// 	return decimal.Decimal{}, err
+	// }
+
+	api := currconv.NewAPI(currconv.Config{
+		BaseURL: "https://free.currconv.com",
+		Version: "v7",
+		APIKey:  "[KEY]",
+	})
+
+	convert, err := api.Convert(currconv.ConvertRequest{
+		Q: []string{fmt.Sprintf("%s_%s", from, to)},
+	})
 	if err != nil {
 		return decimal.Decimal{}, err
 	}
 
-	return resultAmount, nil
+	return decimal.NewFromFloat32(convert.Results[fmt.Sprintf("%s_%s", from, to)].Val), nil
 }
