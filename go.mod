@@ -8,4 +8,4 @@ require (
 	github.com/shopspring/decimal v1.3.1
 )
 
-require github.com/kitloong/go-currency-converter-api/v2 v2.0.1 // indirect
+require github.com/kitloong/go-currency-converter-api/v2 v2.0.1
