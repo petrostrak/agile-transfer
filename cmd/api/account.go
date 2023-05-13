@@ -58,7 +58,18 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"account": account}, nil)
+	var acc struct {
+		ID        int64           `json:"id"`
+		Balance   decimal.Decimal `json:"balance"`
+		Currency  string          `json:"currency"`
+		CreatedAt string          `json:"created_at"`
+	}
+	acc.ID = account.ID
+	acc.Balance = account.Balance
+	acc.Currency = account.Currency
+	acc.CreatedAt = humanDate(account.CreatedAt)
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"account": acc}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -146,7 +157,22 @@ func (app *application) getAllAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"accounts": accounts}, nil)
+	var accs []any
+	for _, account := range accounts {
+		var acc struct {
+			ID        int64           `json:"id"`
+			Balance   decimal.Decimal `json:"balance"`
+			Currency  string          `json:"currency"`
+			CreatedAt string          `json:"created_at"`
+		}
+		acc.ID = account.ID
+		acc.Balance = account.Balance
+		acc.Currency = account.Currency
+		acc.CreatedAt = humanDate(account.CreatedAt)
+		accs = append(accs, acc)
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"accounts": accs}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

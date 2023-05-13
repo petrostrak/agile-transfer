@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/shopspring/decimal"
 )
 
 type envelope map[string]any
@@ -88,10 +88,6 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	return nil
 }
 
-func (app *application) toFloat64(d decimal.Decimal) (float64, error) {
-	result, ok := d.Float64()
-	if !ok {
-		return 0, errors.New("could not parse decimal to float64")
-	}
-	return result, nil
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
 }
