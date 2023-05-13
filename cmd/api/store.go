@@ -39,6 +39,7 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 			SourceAccountID: arg.SourceAccountID,
 			TargetAccountID: arg.TargetAccountID,
 			Amount:          arg.Amount,
+			Currency:        sourceAccount.Currency,
 		}
 		result.Transfer, err = app.models.Transfers.Insert(trasfer)
 		if err != nil {
