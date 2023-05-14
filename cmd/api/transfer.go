@@ -35,7 +35,6 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		SourceAccountID: input.SourceAccountID,
 		TargetAccountID: input.TargetAccountID,
 		Amount:          input.Amount,
-		Currency:        input.Currency,
 	}
 
 	result, err := app.TransferTx(arg)

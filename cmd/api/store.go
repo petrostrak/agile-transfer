@@ -11,7 +11,6 @@ type TransferTxParams struct {
 	SourceAccountID int64           `json:"source_account_id"`
 	TargetAccountID int64           `json:"target_account_id"`
 	Amount          decimal.Decimal `json:"amount"`
-	Currency        string          `json:"currency"`
 }
 
 type TransferTxResult struct {
@@ -35,7 +34,7 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 	}
 
 	if sourceAccount.Currency != targetAccount.Currency {
-		convertedAmount, err := app.currencyConvertion(arg.Currency, targetAccount.Currency, arg.Amount)
+		convertedAmount, err := app.currencyConvertion(sourceAccount.Currency, targetAccount.Currency, arg.Amount)
 		if err != nil {
 			return nil, errors.New("could not convert currency")
 		}
