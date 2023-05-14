@@ -7,6 +7,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var (
+	ErrIdenticalAccount    = errors.New("source and target account are the same")
+	ErrCurrencyConvertion  = errors.New("could not convert currency")
+	ErrInsufficientBalance = errors.New("insufficient balance")
+)
+
 type TransferTxParams struct {
 	SourceAccountID int64           `json:"source_account_id"`
 	TargetAccountID int64           `json:"target_account_id"`
@@ -21,7 +27,6 @@ type TransferTxResult struct {
 
 func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
-	var err error
 
 	sourceAccount, err := app.models.Accounts.Get(arg.SourceAccountID)
 	if err != nil {
@@ -33,17 +38,21 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 		return nil, err
 	}
 
+	if sourceAccount.ID == targetAccount.ID {
+		return nil, ErrIdenticalAccount
+	}
+
 	if sourceAccount.Currency != targetAccount.Currency {
 		convertedAmount, err := app.currencyConvertion(sourceAccount.Currency, targetAccount.Currency, arg.Amount)
 		if err != nil {
-			return nil, errors.New("could not convert currency")
+			return nil, ErrCurrencyConvertion
 		}
 
 		arg.Amount = convertedAmount
 	}
 
 	if !sourceAccount.Balance.GreaterThan(arg.Amount) {
-		return nil, errors.New("insufficient balance")
+		return nil, ErrInsufficientBalance
 	} else {
 		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.Amount.Neg(), arg.TargetAccountID, arg.Amount)
 		if err != nil {
