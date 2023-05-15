@@ -34,5 +34,5 @@ func (app *application) currencyConvertion(from, to string, amount decimal.Decim
 		return decimal.Decimal{}, nil
 	}
 
-	return amount.Mul(multiplier), nil
+	return amount.Mul(multiplier).RoundBank(2), nil
 }
