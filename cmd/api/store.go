@@ -1,16 +1,8 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/petrostrak/agile-transfer/internal/data"
 	"github.com/shopspring/decimal"
-)
-
-var (
-	ErrIdenticalAccount    = errors.New("source and target account are the same")
-	ErrCurrencyConvertion  = errors.New("could not convert currency")
-	ErrInsufficientBalance = errors.New("insufficient balance")
 )
 
 type TransferTxParams struct {

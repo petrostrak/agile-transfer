@@ -1,7 +1,18 @@
 package main
 
 import (
+	"errors"
 	"net/http"
+)
+
+var (
+	ErrIdenticalAccount    = errors.New("source and target account are the same")
+	ErrCurrencyConvertion  = errors.New("could not convert currency")
+	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrInvalidIDParam      = errors.New("invalid id parameter")
+	ErrEmptyBody           = errors.New("body must not be empty")
+	ErrBadJSON             = errors.New("body contains badly-formed JSON")
+	ErrSingleJSON          = errors.New("body must only contain a single JSON value")
 )
 
 func (app *application) logError(r *http.Request, err error) {

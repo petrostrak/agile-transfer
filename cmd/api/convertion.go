@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -26,7 +25,7 @@ func (app *application) currencyConvertion(from, to string, amount decimal.Decim
 
 	unit, ok := convert.Data[to]
 	if !ok {
-		return decimal.Decimal{}, errors.New("could not convert currency")
+		return decimal.Decimal{}, ErrCurrencyConvertion
 	}
 
 	multiplier := decimal.NewFromFloat(unit)
