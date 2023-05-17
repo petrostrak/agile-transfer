@@ -43,24 +43,24 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 		arg.Amount = convertedAmount
 	}
 
-	if !sourceAccount.Balance.GreaterThan(arg.Amount) {
+	if sourceAccount.Balance.LessThan(arg.Amount) {
 		return nil, ErrInsufficientBalance
-	} else {
-		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.Amount.Neg(), arg.TargetAccountID, arg.Amount)
-		if err != nil {
-			return &result, err
-		}
+	}
 
-		trasfer := data.Transfer{
-			SourceAccountID: arg.SourceAccountID,
-			TargetAccountID: arg.TargetAccountID,
-			Amount:          arg.Amount,
-			Currency:        targetAccount.Currency,
-		}
-		result.Transfer, err = app.models.Transfers.Insert(trasfer)
-		if err != nil {
-			return &result, err
-		}
+	result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.Amount.Neg(), arg.TargetAccountID, arg.Amount)
+	if err != nil {
+		return &result, err
+	}
+
+	trasfer := data.Transfer{
+		SourceAccountID: arg.SourceAccountID,
+		TargetAccountID: arg.TargetAccountID,
+		Amount:          arg.Amount,
+		Currency:        targetAccount.Currency,
+	}
+	result.Transfer, err = app.models.Transfers.Insert(trasfer)
+	if err != nil {
+		return &result, err
 	}
 
 	return &result, err
