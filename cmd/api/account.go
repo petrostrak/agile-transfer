@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/petrostrak/agile-transfer/internal/data"
 	"github.com/shopspring/decimal"
@@ -146,7 +148,10 @@ func (app *application) deleteAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getAllAccounts(w http.ResponseWriter, r *http.Request) {
-	accounts, err := app.models.Accounts.GetAll()
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	accounts, err := app.models.Accounts.GetAll(ctx)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):

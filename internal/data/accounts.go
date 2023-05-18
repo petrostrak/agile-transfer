@@ -142,15 +142,20 @@ func (a AccountModel) Delete(id int64) error {
 	return nil
 }
 
-func (a AccountModel) GetAll() ([]Account, error) {
+func (a AccountModel) GetAll(ctx context.Context) ([]Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at
 		FROM accounts
 		ORDER BY id`
 
-	rows, err := a.DB.Query(query)
+	rows, err := a.DB.QueryContext(ctx, query)
 	if err != nil {
-		return nil, err
+		switch {
+		case err.Error() == "pq: canceling statement due to user request":
+			return nil, ctx.Err()
+		default:
+			return nil, err
+		}
 	}
 	defer rows.Close()
 
