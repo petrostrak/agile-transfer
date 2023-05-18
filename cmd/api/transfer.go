@@ -23,8 +23,8 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	accounts, err := app.validAccounts(w, r, input.SourceAccountID, input.TargetAccountID)
-	if err != nil || len(accounts) != 2 {
+	accounts, err := app.validAccounts(input.SourceAccountID, input.TargetAccountID)
+	if err != nil {
 		return
 	}
 
@@ -49,14 +49,8 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) validAccounts(w http.ResponseWriter, r *http.Request, sourceAccountID, targetAccountID int64) ([]data.Account, error) {
-	accounts, err := app.models.Accounts.ValidateAccounts(sourceAccountID, targetAccountID)
-	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, "One or more of the accounts does not exist")
-		return nil, err
-	}
-
-	return accounts, nil
+func (app *application) validAccounts(sourceAccountID, targetAccountID int64) ([]data.Account, error) {
+	return app.models.Accounts.ValidateAccounts(sourceAccountID, targetAccountID)
 }
 
 func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {

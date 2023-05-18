@@ -91,6 +91,10 @@ func (a AccountModel) ValidateAccounts(sourceAccountID, targetAccountID int64) (
 		accounts = append(accounts, account)
 	}
 
+	if len(accounts) != 2 {
+		return nil, errors.New("One or more of the accounts does not exist")
+	}
+
 	return accounts, nil
 }
 
