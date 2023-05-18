@@ -45,7 +45,12 @@ func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*
 			return ErrInsufficientBalance
 		}
 
-		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.AmountToTransfer.Neg(), arg.TargetAccountID, arg.AmountToTransfer)
+		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(
+			arg.SourceAccountID,
+			arg.AmountToTransfer.Neg(),
+			arg.TargetAccountID,
+			arg.AmountToTransfer,
+		)
 		if err != nil {
 			return err
 		}
@@ -56,6 +61,7 @@ func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*
 			Amount:          arg.AmountToTransfer,
 			Currency:        arg.TargetCurrency,
 		}
+
 		result.Transfer, err = app.models.Transfers.Insert(trasfer)
 		if err != nil {
 			return err
