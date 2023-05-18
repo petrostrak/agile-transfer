@@ -92,7 +92,7 @@ func (a AccountModel) ValidateAccounts(sourceAccountID, targetAccountID int64) (
 	}
 
 	if len(accounts) != 2 {
-		return nil, errors.New("One or more of the accounts does not exist")
+		return nil, errors.New("one or more of the accounts does not exist")
 	}
 
 	return accounts, nil
