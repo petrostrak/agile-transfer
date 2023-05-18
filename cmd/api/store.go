@@ -46,6 +46,7 @@ func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*
 		}
 
 		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(
+			ctx,
 			arg.SourceAccountID,
 			arg.AmountToTransfer.Neg(),
 			arg.TargetAccountID,
@@ -62,7 +63,7 @@ func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*
 			Currency:        arg.TargetCurrency,
 		}
 
-		result.Transfer, err = app.models.Transfers.Insert(trasfer)
+		result.Transfer, err = app.models.Transfers.Insert(ctx, trasfer)
 		if err != nil {
 			return err
 		}

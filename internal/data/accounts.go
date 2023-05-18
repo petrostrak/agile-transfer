@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -59,7 +60,7 @@ func (a AccountModel) Get(id int64) (*Account, error) {
 	return &account, nil
 }
 
-func (a AccountModel) ValidateAccounts(sourceAccountID, targetAccountID int64) ([]Account, error) {
+func (a AccountModel) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]Account, error) {
 	if sourceAccountID < 1 || targetAccountID < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -71,7 +72,7 @@ func (a AccountModel) ValidateAccounts(sourceAccountID, targetAccountID int64) (
 
 	args := []any{sourceAccountID, targetAccountID}
 
-	rows, err := a.DB.Query(query, args...)
+	rows, err := a.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +171,7 @@ func (a AccountModel) GetAll() ([]Account, error) {
 	return accounts, nil
 }
 
-func (a AccountModel) AddAccountBalance(id int64, amount decimal.Decimal) (Account, error) {
+func (a AccountModel) AddAccountBalance(ctx context.Context, id int64, amount decimal.Decimal) (Account, error) {
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
@@ -180,7 +181,7 @@ func (a AccountModel) AddAccountBalance(id int64, amount decimal.Decimal) (Accou
 	args := []any{amount, id}
 
 	var account Account
-	err := a.DB.QueryRow(query, args...).Scan(
+	err := a.DB.QueryRowContext(ctx, query, args...).Scan(
 		&account.ID,
 		&account.Balance,
 		&account.Currency,
@@ -190,13 +191,13 @@ func (a AccountModel) AddAccountBalance(id int64, amount decimal.Decimal) (Accou
 	return account, err
 }
 
-func (a AccountModel) AddMoney(sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount Account, err error) {
-	sourceAccount, err = a.AddAccountBalance(sourceAccountID, sourceAccountAmount)
+func (a AccountModel) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount Account, err error) {
+	sourceAccount, err = a.AddAccountBalance(ctx, sourceAccountID, sourceAccountAmount)
 	if err != nil {
 		return
 	}
 
-	targetAccount, err = a.AddAccountBalance(targetAccountID, targetAccountAmount)
+	targetAccount, err = a.AddAccountBalance(ctx, targetAccountID, targetAccountAmount)
 	if err != nil {
 		return
 	}

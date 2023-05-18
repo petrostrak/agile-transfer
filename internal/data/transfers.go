@@ -21,7 +21,7 @@ type TransferModel struct {
 	DB *sql.DB
 }
 
-func (t TransferModel) Insert(tx Transfer) (Transfer, error) {
+func (t TransferModel) Insert(ctx context.Context, tx Transfer) (Transfer, error) {
 	query := `
 		INSERT INTO transfers (source_account_id, target_account_id, amount, currency)
 		VALUES ($1, $2, $3, $4)
@@ -29,7 +29,7 @@ func (t TransferModel) Insert(tx Transfer) (Transfer, error) {
 
 	args := []any{tx.SourceAccountID, tx.TargetAccountID, tx.Amount, tx.Currency}
 	var transfer Transfer
-	err := t.DB.QueryRow(query, args...).Scan(
+	err := t.DB.QueryRowContext(ctx, query, args...).Scan(
 		&transfer.ID,
 		&transfer.SourceAccountID,
 		&transfer.TargetAccountID,
@@ -102,7 +102,12 @@ func (t TransferModel) GetAll() ([]Transfer, error) {
 func (t TransferModel) ExecTx(ctx context.Context, fn func() error) error {
 	tx, err := t.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		switch {
+		case err.Error() == "pq: canceling statement due to user request":
+			return ctx.Err()
+		default:
+			return err
+		}
 	}
 
 	if err = fn(); err != nil {

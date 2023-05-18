@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/petrostrak/agile-transfer/internal/data"
 	"github.com/shopspring/decimal"
 )
 
 func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+	defer cancel()
 
 	var input struct {
 		SourceAccountID int64           `json:"source_account_id"`
@@ -23,7 +26,7 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	accounts, err := app.validAccounts(input.SourceAccountID, input.TargetAccountID)
+	accounts, err := app.validAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
 	if err != nil {
 		return
 	}
@@ -49,8 +52,8 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) validAccounts(sourceAccountID, targetAccountID int64) ([]data.Account, error) {
-	return app.models.Accounts.ValidateAccounts(sourceAccountID, targetAccountID)
+func (app *application) validAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]data.Account, error) {
+	return app.models.Accounts.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }
 
 func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {
