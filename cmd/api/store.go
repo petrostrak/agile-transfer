@@ -22,40 +22,45 @@ type TransferTxResult struct {
 
 func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
-	var err error
 
-	if arg.SourceAccountID == arg.TargetAccountID {
-		return nil, ErrIdenticalAccount
-	}
+	err := app.models.Transfers.ExecTx(func() error {
+		var err error
 
-	if arg.SourceCurrency != arg.TargetCurrency {
-		convertedAmount, err := app.currencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
-		if err != nil {
-			return nil, ErrCurrencyConvertion
+		if arg.SourceAccountID == arg.TargetAccountID {
+			return ErrIdenticalAccount
 		}
 
-		arg.AmountToTransfer = convertedAmount
-	}
+		if arg.SourceCurrency != arg.TargetCurrency {
+			convertedAmount, err := app.currencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
+			if err != nil {
+				return ErrCurrencyConvertion
+			}
 
-	if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
-		return nil, ErrInsufficientBalance
-	}
+			arg.AmountToTransfer = convertedAmount
+		}
 
-	result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.AmountToTransfer.Neg(), arg.TargetAccountID, arg.AmountToTransfer)
-	if err != nil {
-		return &result, err
-	}
+		if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
+			return ErrInsufficientBalance
+		}
 
-	trasfer := data.Transfer{
-		SourceAccountID: arg.SourceAccountID,
-		TargetAccountID: arg.TargetAccountID,
-		Amount:          arg.AmountToTransfer,
-		Currency:        arg.TargetCurrency,
-	}
-	result.Transfer, err = app.models.Transfers.Insert(trasfer)
-	if err != nil {
-		return &result, err
-	}
+		result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.AmountToTransfer.Neg(), arg.TargetAccountID, arg.AmountToTransfer)
+		if err != nil {
+			return err
+		}
+
+		trasfer := data.Transfer{
+			SourceAccountID: arg.SourceAccountID,
+			TargetAccountID: arg.TargetAccountID,
+			Amount:          arg.AmountToTransfer,
+			Currency:        arg.TargetCurrency,
+		}
+		result.Transfer, err = app.models.Transfers.Insert(trasfer)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return &result, err
 }

@@ -99,14 +99,13 @@ func (t TransferModel) GetAll() ([]Transfer, error) {
 	return transfers, nil
 }
 
-func (t TransferModel) execTx(fn func(*Queries) error) error {
+func (t TransferModel) ExecTx(fn func() error) error {
 	tx, err := t.DB.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
 
-	q := New(tx)
-	if err = fn(q); err != nil {
+	if err = fn(); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)
 		}
