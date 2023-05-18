@@ -59,6 +59,41 @@ func (a AccountModel) Get(id int64) (*Account, error) {
 	return &account, nil
 }
 
+func (a AccountModel) ValidateAccounts(sourceAccountID, targetAccountID int64) ([]Account, error) {
+	if sourceAccountID < 1 || targetAccountID < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, balance, currency, created_at 
+		FROM accounts
+		WHERE id IN ($1, $2)`
+
+	args := []any{sourceAccountID, targetAccountID}
+
+	rows, err := a.DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []Account
+	for rows.Next() {
+		var account Account
+		if err := rows.Scan(
+			&account.ID,
+			&account.Balance,
+			&account.Currency,
+			&account.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
 func (a AccountModel) Update(account *Account) error {
 	query := `
 		UPDATE accounts
