@@ -99,8 +99,8 @@ func (t TransferModel) GetAll() ([]Transfer, error) {
 	return transfers, nil
 }
 
-func (t TransferModel) ExecTx(fn func() error) error {
-	tx, err := t.DB.BeginTx(context.Background(), nil)
+func (t TransferModel) ExecTx(ctx context.Context, fn func() error) error {
+	tx, err := t.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}

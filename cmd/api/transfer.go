@@ -9,6 +9,8 @@ import (
 )
 
 func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var input struct {
 		SourceAccountID int64           `json:"source_account_id"`
 		TargetAccountID int64           `json:"target_account_id"`
@@ -35,7 +37,7 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		AmountToTransfer: input.Amount,
 	}
 
-	result, err := app.TransferTx(arg)
+	result, err := app.TransferTx(ctx, arg)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return

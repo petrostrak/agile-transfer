@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/petrostrak/agile-transfer/internal/data"
 	"github.com/shopspring/decimal"
 )
@@ -20,10 +22,10 @@ type TransferTxResult struct {
 	TargetAccount data.Account `json:"target_account"`
 }
 
-func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, error) {
+func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
 
-	err := app.models.Transfers.ExecTx(func() error {
+	err := app.models.Transfers.ExecTx(ctx, func() error {
 		var err error
 
 		if arg.SourceAccountID == arg.TargetAccountID {
