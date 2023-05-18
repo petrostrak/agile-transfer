@@ -21,20 +21,23 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	err = app.validAccount(w, r, input.SourceAccountID, input.Currency)
+	sourceAcc, err := app.validAccount(w, r, input.SourceAccountID)
 	if err != nil {
 		return
 	}
 
-	err = app.validAccount(w, r, input.TargetAccountID, input.Currency)
+	targetAcc, err := app.validAccount(w, r, input.TargetAccountID)
 	if err != nil {
 		return
 	}
 
 	arg := TransferTxParams{
-		SourceAccountID: input.SourceAccountID,
-		TargetAccountID: input.TargetAccountID,
-		Amount:          input.Amount,
+		SourceAccountID:  input.SourceAccountID,
+		TargetAccountID:  input.TargetAccountID,
+		SourceBalance:    sourceAcc.Balance,
+		SourceCurrency:   sourceAcc.Currency,
+		TargetCurrency:   targetAcc.Currency,
+		AmountToTransfer: input.Amount,
 	}
 
 	result, err := app.TransferTx(arg)
@@ -49,14 +52,14 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) validAccount(w http.ResponseWriter, r *http.Request, accountID int64, currency string) error {
-	_, err := app.models.Accounts.Get(accountID)
+func (app *application) validAccount(w http.ResponseWriter, r *http.Request, accountID int64) (*data.Account, error) {
+	account, err := app.models.Accounts.Get(accountID)
 	if err != nil {
 		app.errorResponse(w, r, http.StatusBadRequest, "One or more of the accounts does not exist")
-		return err
+		return nil, err
 	}
 
-	return nil
+	return account, nil
 }
 
 func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) {

@@ -6,9 +6,12 @@ import (
 )
 
 type TransferTxParams struct {
-	SourceAccountID int64           `json:"source_account_id"`
-	TargetAccountID int64           `json:"target_account_id"`
-	Amount          decimal.Decimal `json:"amount"`
+	SourceAccountID  int64           `json:"source_account_id"`
+	TargetAccountID  int64           `json:"target_account_id"`
+	SourceBalance    decimal.Decimal `json:"source_balance"`
+	AmountToTransfer decimal.Decimal `json:"amount_to_transfer"`
+	SourceCurrency   string          `json:"source_currency"`
+	TargetCurrency   string          `json:"target_currency"`
 }
 
 type TransferTxResult struct {
@@ -19,35 +22,26 @@ type TransferTxResult struct {
 
 func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
+	var err error
 
-	sourceAccount, err := app.models.Accounts.Get(arg.SourceAccountID)
-	if err != nil {
-		return nil, err
-	}
-
-	targetAccount, err := app.models.Accounts.Get(arg.TargetAccountID)
-	if err != nil {
-		return nil, err
-	}
-
-	if sourceAccount.ID == targetAccount.ID {
+	if arg.SourceAccountID == arg.TargetAccountID {
 		return nil, ErrIdenticalAccount
 	}
 
-	if sourceAccount.Currency != targetAccount.Currency {
-		convertedAmount, err := app.currencyConvertion(sourceAccount.Currency, targetAccount.Currency, arg.Amount)
+	if arg.SourceCurrency != arg.TargetCurrency {
+		convertedAmount, err := app.currencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
 		if err != nil {
 			return nil, ErrCurrencyConvertion
 		}
 
-		arg.Amount = convertedAmount
+		arg.AmountToTransfer = convertedAmount
 	}
 
-	if sourceAccount.Balance.LessThan(arg.Amount) {
+	if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
 		return nil, ErrInsufficientBalance
 	}
 
-	result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.Amount.Neg(), arg.TargetAccountID, arg.Amount)
+	result.SourceAccount, result.TargetAccount, err = app.models.Accounts.AddMoney(arg.SourceAccountID, arg.AmountToTransfer.Neg(), arg.TargetAccountID, arg.AmountToTransfer)
 	if err != nil {
 		return &result, err
 	}
@@ -55,8 +49,8 @@ func (app *application) TransferTx(arg TransferTxParams) (*TransferTxResult, err
 	trasfer := data.Transfer{
 		SourceAccountID: arg.SourceAccountID,
 		TargetAccountID: arg.TargetAccountID,
-		Amount:          arg.Amount,
-		Currency:        targetAccount.Currency,
+		Amount:          arg.AmountToTransfer,
+		Currency:        arg.TargetCurrency,
 	}
 	result.Transfer, err = app.models.Transfers.Insert(trasfer)
 	if err != nil {
