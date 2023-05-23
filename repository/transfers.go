@@ -1,4 +1,4 @@
-package data
+package repository
 
 import (
 	"context"
@@ -17,11 +17,11 @@ type Transfer struct {
 	Currency        string          `json:"currency"`
 }
 
-type TransferModel struct {
+type transferRepository struct {
 	DB *sql.DB
 }
 
-func (t TransferModel) Insert(ctx context.Context, tx Transfer) (Transfer, error) {
+func (t *transferRepository) Insert(ctx context.Context, tx Transfer) (Transfer, error) {
 	query := `
 		INSERT INTO transfers (source_account_id, target_account_id, amount, currency)
 		VALUES ($1, $2, $3, $4)
@@ -40,7 +40,7 @@ func (t TransferModel) Insert(ctx context.Context, tx Transfer) (Transfer, error
 	return transfer, err
 }
 
-func (t TransferModel) Get(id int64) (*Transfer, error) {
+func (t *transferRepository) Get(id int64) (*Transfer, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -69,7 +69,7 @@ func (t TransferModel) Get(id int64) (*Transfer, error) {
 	return &tx, nil
 }
 
-func (t TransferModel) GetAll() ([]Transfer, error) {
+func (t *transferRepository) GetAll() ([]Transfer, error) {
 	query := `
 			SELECT id, source_account_id, target_account_id, amount, currency
 			FROM transfers
@@ -99,7 +99,7 @@ func (t TransferModel) GetAll() ([]Transfer, error) {
 	return transfers, nil
 }
 
-func (t TransferModel) ExecTx(ctx context.Context, fn func() error) error {
+func (t *transferRepository) ExecTx(ctx context.Context, fn func() error) error {
 	tx, err := t.DB.BeginTx(ctx, nil)
 	if err != nil {
 		switch {

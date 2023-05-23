@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/petrostrak/agile-transfer/repository"
 	"github.com/shopspring/decimal"
 )
 
@@ -22,7 +22,7 @@ func (app *application) createAccount(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 	}
 
-	account := &data.Account{
+	account := &repository.Account{
 		Balance:  input.Balance,
 		Currency: input.Currency,
 	}
@@ -52,7 +52,7 @@ func (app *application) getAccount(w http.ResponseWriter, r *http.Request) {
 	account, err := app.models.Accounts.Get(id)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, repository.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -87,7 +87,7 @@ func (app *application) updateAccount(w http.ResponseWriter, r *http.Request) {
 	account, err := app.models.Accounts.Get(id)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, repository.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -133,7 +133,7 @@ func (app *application) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	err = app.models.Accounts.Delete(id)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, repository.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -154,7 +154,7 @@ func (app *application) getAllAccounts(w http.ResponseWriter, r *http.Request) {
 	accounts, err := app.models.Accounts.GetAll(ctx)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, repository.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/petrostrak/agile-transfer/repository"
 )
 
 type config struct {
@@ -28,7 +28,7 @@ type config struct {
 type application struct {
 	config
 	logger *log.Logger
-	models data.Models
+	models repository.Models
 }
 
 func main() {
@@ -48,12 +48,12 @@ func main() {
 		logger.Fatal(err)
 	}
 	defer db.Close()
-	logger.Printf("database connection pool established")
+	logger.Printf("repositorybase connection pool established")
 
 	app := &application{
 		config: cfg,
 		logger: logger,
-		models: data.NewModels(db),
+		models: repository.NewModels(db),
 	}
 
 	srv := &http.Server{

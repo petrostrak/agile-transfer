@@ -1,4 +1,4 @@
-package data
+package repository
 
 import (
 	"context"
@@ -16,11 +16,11 @@ type Account struct {
 	CreatedAt time.Time       `json:"created_at"`
 }
 
-type AccountModel struct {
+type accountRepository struct {
 	DB *sql.DB
 }
 
-func (a AccountModel) Insert(acc *Account) error {
+func (a *accountRepository) Insert(acc *Account) error {
 	query := `
 		INSERT INTO accounts (balance, currency)
 		VALUES ($1, $2)
@@ -31,7 +31,7 @@ func (a AccountModel) Insert(acc *Account) error {
 	return a.DB.QueryRow(query, args...).Scan(&acc.ID, &acc.Balance, &acc.Currency, &acc.CreatedAt)
 }
 
-func (a AccountModel) Get(id int64) (*Account, error) {
+func (a *accountRepository) Get(id int64) (*Account, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -60,7 +60,7 @@ func (a AccountModel) Get(id int64) (*Account, error) {
 	return &account, nil
 }
 
-func (a AccountModel) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]Account, error) {
+func (a *accountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]Account, error) {
 	if sourceAccountID < 1 || targetAccountID < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -99,7 +99,7 @@ func (a AccountModel) ValidateAccounts(ctx context.Context, sourceAccountID, tar
 	return accounts, nil
 }
 
-func (a AccountModel) Update(account *Account) error {
+func (a *accountRepository) Update(account *Account) error {
 	query := `
 		UPDATE accounts
 		SET balance = $1
@@ -116,7 +116,7 @@ func (a AccountModel) Update(account *Account) error {
 	)
 }
 
-func (a AccountModel) Delete(id int64) error {
+func (a *accountRepository) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
@@ -142,7 +142,7 @@ func (a AccountModel) Delete(id int64) error {
 	return nil
 }
 
-func (a AccountModel) GetAll(ctx context.Context) ([]Account, error) {
+func (a *accountRepository) GetAll(ctx context.Context) ([]Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at
 		FROM accounts
@@ -176,7 +176,7 @@ func (a AccountModel) GetAll(ctx context.Context) ([]Account, error) {
 	return accounts, nil
 }
 
-func (a AccountModel) AddAccountBalance(ctx context.Context, id int64, amount decimal.Decimal) (Account, error) {
+func (a *accountRepository) AddAccountBalance(ctx context.Context, id int64, amount decimal.Decimal) (Account, error) {
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
@@ -196,7 +196,7 @@ func (a AccountModel) AddAccountBalance(ctx context.Context, id int64, amount de
 	return account, err
 }
 
-func (a AccountModel) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount Account, err error) {
+func (a *accountRepository) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount Account, err error) {
 	sourceAccount, err = a.AddAccountBalance(ctx, sourceAccountID, sourceAccountAmount)
 	if err != nil {
 		return

@@ -1,4 +1,4 @@
-package data
+package repository
 
 import (
 	"database/sql"
@@ -8,13 +8,13 @@ import (
 var ErrRecordNotFound = errors.New("record not Found")
 
 type Models struct {
-	Accounts  AccountModel
-	Transfers TransferModel
+	Accounts  accountRepository
+	Transfers transferRepository
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Accounts:  AccountModel{DB: db},
-		Transfers: TransferModel{DB: db},
+		Accounts:  accountRepository{DB: db},
+		Transfers: transferRepository{DB: db},
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/petrostrak/agile-transfer/repository"
 	"github.com/shopspring/decimal"
 )
 
@@ -52,7 +52,7 @@ func (app *application) createTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) validAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]data.Account, error) {
+func (app *application) validAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]repository.Account, error) {
 	return app.models.Accounts.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }
 
@@ -60,7 +60,7 @@ func (app *application) getAllTransfers(w http.ResponseWriter, r *http.Request) 
 	transfers, err := app.models.Transfers.GetAll()
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, repository.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)

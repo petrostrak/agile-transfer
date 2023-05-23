@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/petrostrak/agile-transfer/internal/data"
+	"github.com/petrostrak/agile-transfer/repository"
 	"github.com/shopspring/decimal"
 )
 
@@ -17,9 +17,9 @@ type TransferTxParams struct {
 }
 
 type TransferTxResult struct {
-	data.Transfer `json:"transfer"`
-	SourceAccount data.Account `json:"source_account"`
-	TargetAccount data.Account `json:"target_account"`
+	repository.Transfer `json:"transfer"`
+	SourceAccount       repository.Account `json:"source_account"`
+	TargetAccount       repository.Account `json:"target_account"`
 }
 
 func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*TransferTxResult, error) {
@@ -56,7 +56,7 @@ func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*
 			return err
 		}
 
-		trasfer := data.Transfer{
+		trasfer := repository.Transfer{
 			SourceAccountID: arg.SourceAccountID,
 			TargetAccountID: arg.TargetAccountID,
 			Amount:          arg.AmountToTransfer,
