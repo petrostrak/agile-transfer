@@ -1,90 +1,67 @@
 package main
 
 import (
-	"context"
-	"database/sql"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	_ "github.com/lib/pq"
-	"github.com/petrostrak/agile-transfer/repository"
-	"github.com/petrostrak/agile-transfer/routes"
+	"github.com/petrostrak/agile-transfer/internal/adapters/handlers"
+	"github.com/petrostrak/agile-transfer/internal/adapters/repository"
+	"github.com/petrostrak/agile-transfer/internal/core/services"
 )
 
-type config struct {
-	port int
-	env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
-	}
-}
-
-type Application struct {
-	config
-	models repository.Models
-}
+var (
+	accountHandler  *handlers.AccountHandler
+	transferHandler *handlers.TransferHandler
+	accountService  *services.AccountService
+	transferService *services.TransferService
+)
 
 func main() {
-	var cfg config
-	flag.IntVar(&cfg.port, "port", 8080, "API server port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:password@localhost/agile_transfer?sslmode=disable", "PostgreSQL DSN")
-	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
-	flag.Parse()
-
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	db, err := openDB(cfg)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	defer db.Close()
-	logger.Printf("repositorybase connection pool established")
+	store := repository.NewPostgressRepository()
+	accountService = services.NewAccountService(store.AccountRepository)
+	transferService = services.NewTransferService(store.TransferRepository)
 
 	srv := &http.Server{
-		Addr:        fmt.Sprintf(":%d", cfg.port),
-		Handler:     routes.Routes(),
+		Addr:        fmt.Sprintf(":%d", 8080),
+		Handler:     Routes(),
 		IdleTimeout: time.Minute,
 		ReadTimeout: 10 * time.Second,
 	}
 
-	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
-	if err = srv.ListenAndServe(); err != nil {
+	logger.Printf("starting development server on %s", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
 		logger.Fatal(err)
 	}
 }
 
-func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.db.dsn)
-	if err != nil {
-		return nil, err
-	}
+func Routes() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Route("/accounts", func(r chi.Router) {
+		r.Get("/", accountHandler.GetAllAccounts)
+		r.Post("/", accountHandler.CreateAccount)
+		r.Get("/{id}", accountHandler.GetAccount)
+		r.Patch("/{id}", accountHandler.UpdateAccount)
+		r.Delete("/{id}", accountHandler.DeleteAccount)
+	})
+	r.Post("/transfer", transferHandler.CreateTransfer)
+	r.Get("/transactions", transferHandler.GetAllTransfers)
 
-	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+	chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
+		return nil
+	})
 
-	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-	db.SetConnMaxIdleTime(duration)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = db.PingContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return r
 }

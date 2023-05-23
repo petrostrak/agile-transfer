@@ -7,17 +7,24 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/petrostrak/agile-transfer/cmd"
-	"github.com/petrostrak/agile-transfer/repository"
+	"github.com/petrostrak/agile-transfer/internal/adapters/repository"
+	"github.com/petrostrak/agile-transfer/internal/core/domain"
+	"github.com/petrostrak/agile-transfer/internal/core/services"
 	"github.com/petrostrak/agile-transfer/utils"
 	"github.com/shopspring/decimal"
 )
 
-type accountHandler struct {
-	accountService cmd.AccountService
+type AccountHandler struct {
+	svc services.AccountService
 }
 
-func (a *accountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
+func NewAccountHandler(accountService services.AccountService) *AccountHandler {
+	return &AccountHandler{
+		accountService,
+	}
+}
+
+func (a *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Balance  decimal.Decimal `json:"balance"`
 		Currency string          `json:"currency"`
@@ -28,12 +35,12 @@ func (a *accountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		utils.BadRequestResponse(w, r, err)
 	}
 
-	account := &cmd.Account{
+	account := &domain.Account{
 		Balance:  input.Balance,
 		Currency: input.Currency,
 	}
 
-	err = a.accountService.Insert(account)
+	err = a.svc.Insert(account)
 	if err != nil {
 		utils.ServerErrorResponse(w, r, err)
 		return
@@ -48,14 +55,14 @@ func (a *accountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *accountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
+func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		utils.NotFoundResponse(w, r)
 		return
 	}
 
-	account, err := a.accountService.Get(id)
+	account, err := a.svc.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -83,14 +90,14 @@ func (a *accountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *accountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
+func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		utils.NotFoundResponse(w, r)
 		return
 	}
 
-	account, err := a.accountService.Get(id)
+	account, err := a.svc.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -117,7 +124,7 @@ func (a *accountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		account.Currency = *input.Currency
 	}
 
-	err = a.accountService.Update(account)
+	err = a.svc.Update(account)
 	if err != nil {
 		utils.ServerErrorResponse(w, r, err)
 		return
@@ -129,14 +136,14 @@ func (a *accountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *accountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+func (a *AccountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ReadIDParam(r)
 	if err != nil {
 		utils.NotFoundResponse(w, r)
 		return
 	}
 
-	err = a.accountService.Delete(id)
+	err = a.svc.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -153,11 +160,11 @@ func (a *accountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *accountHandler) GetAllAccounts(w http.ResponseWriter, r *http.Request) {
+func (a *AccountHandler) GetAllAccounts(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	accounts, err := a.accountService.GetAll(ctx)
+	accounts, err := a.svc.GetAll(ctx)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
