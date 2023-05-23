@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -22,7 +22,7 @@ type TransferTxResult struct {
 	TargetAccount       repository.Account `json:"target_account"`
 }
 
-func (app *application) TransferTx(ctx context.Context, arg TransferTxParams) (*TransferTxResult, error) {
+func (app *Application) TransferTx(ctx context.Context, arg TransferTxParams) (*TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := app.models.Transfers.ExecTx(ctx, func() error {

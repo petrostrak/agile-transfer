@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/json"
@@ -13,9 +13,9 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type envelope map[string]any
+type Envelope map[string]any
 
-func (app *application) readIDParam(r *http.Request) (int64, error) {
+func ReadIDParam(r *http.Request) (int64, error) {
 	params := chi.URLParamFromCtx(r.Context(), "id")
 	id, err := strconv.ParseInt(params, 10, 64)
 	if err != nil || id < 1 {
@@ -25,7 +25,7 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
+func WriteJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -35,14 +35,14 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any, h
 		w.Header()[key] = value
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "Application/json")
 	w.WriteHeader(status)
 	w.Write(js)
 
 	return nil
 }
 
-func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+func ReadJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 	maxBytes := 1_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	dec := json.NewDecoder(r.Body)
@@ -88,6 +88,6 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	return nil
 }
 
-func humanDate(t time.Time) string {
+func HumanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 15:04")
 }

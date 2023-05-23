@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (app *application) currencyConvertion(from, to string, amount decimal.Decimal) (decimal.Decimal, error) {
+func CurrencyConvertion(from, to string, amount decimal.Decimal) (decimal.Decimal, error) {
 	resp, err := http.Get(fmt.Sprintf("https://api.freecurrencyapi.com/v1/latest?apikey=QAVbfQcb3HY3YDFtDWdIm7yXzGUMymbipsxXYOj6&currencies=%s&base_currency=%s", to, from))
 	if err != nil {
 		return decimal.Decimal{}, nil
