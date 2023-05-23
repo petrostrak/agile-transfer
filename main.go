@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/petrostrak/agile-transfer/internal/adapters/handlers"
 	"github.com/petrostrak/agile-transfer/internal/adapters/repository"
@@ -16,8 +16,6 @@ import (
 )
 
 var (
-	accountHandler  *handlers.AccountHandler
-	transferHandler *handlers.TransferHandler
 	accountService  *services.AccountService
 	transferService *services.TransferService
 )
@@ -48,6 +46,10 @@ func Routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
+	accountHandler := handlers.NewAccountHandler(*accountService)
+	transferHandler := handlers.NewTransferHandler(*transferService)
+
 	r.Route("/accounts", func(r chi.Router) {
 		r.Get("/", accountHandler.GetAllAccounts)
 		r.Post("/", accountHandler.CreateAccount)
