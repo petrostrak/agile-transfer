@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
+	"github.com/petrostrak/agile-transfer/utils"
 	"github.com/shopspring/decimal"
 )
 
@@ -52,22 +53,14 @@ type TransferRepository struct {
 	DB *sql.DB
 }
 
-type Transfer struct {
-	ID              int64           `json:"id"`
-	SourceAccountID int64           `json:"source_account_id"`
-	TargetAccountID int64           `json:"target_account_id"`
-	Amount          decimal.Decimal `json:"amount"`
-	Currency        string          `json:"currency"`
-}
-
-func (t *TransferRepository) Insert(ctx context.Context, tx Transfer) (Transfer, error) {
+func (t *TransferRepository) Insert(ctx context.Context, tx domain.Transfer) (domain.Transfer, error) {
 	query := `
 		INSERT INTO transfers (source_account_id, target_account_id, amount, currency)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, source_account_id, target_account_id, amount, currency`
 
 	args := []any{tx.SourceAccountID, tx.TargetAccountID, tx.Amount, tx.Currency}
-	var transfer Transfer
+	var transfer domain.Transfer
 	err := t.DB.QueryRowContext(ctx, query, args...).Scan(
 		&transfer.ID,
 		&transfer.SourceAccountID,
@@ -79,7 +72,7 @@ func (t *TransferRepository) Insert(ctx context.Context, tx Transfer) (Transfer,
 	return transfer, err
 }
 
-func (t *TransferRepository) Get(id int64) (*Transfer, error) {
+func (t *TransferRepository) Get(id int64) (*domain.Transfer, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -89,7 +82,7 @@ func (t *TransferRepository) Get(id int64) (*Transfer, error) {
 		FROM transfers
 		WHERE id = $1`
 
-	var tx Transfer
+	var tx domain.Transfer
 	err := t.DB.QueryRow(query, id).Scan(
 		&tx.ID,
 		&tx.SourceAccountID,
@@ -108,7 +101,7 @@ func (t *TransferRepository) Get(id int64) (*Transfer, error) {
 	return &tx, nil
 }
 
-func (t *TransferRepository) GetAll() ([]Transfer, error) {
+func (t *TransferRepository) GetAll() ([]domain.Transfer, error) {
 	query := `
 			SELECT id, source_account_id, target_account_id, amount, currency
 			FROM transfers
@@ -120,9 +113,9 @@ func (t *TransferRepository) GetAll() ([]Transfer, error) {
 	}
 	defer rows.Close()
 
-	var transfers []Transfer
+	var transfers []domain.Transfer
 	for rows.Next() {
-		var transfer Transfer
+		var transfer domain.Transfer
 		if err := rows.Scan(
 			&transfer.ID,
 			&transfer.SourceAccountID,
@@ -180,58 +173,73 @@ func (t *TransferRepository) AddAccountBalance(ctx context.Context, id int64, am
 	return account, err
 }
 
-type AccountRepository struct {
-	DB *sql.DB
-}
-
-type Account struct {
-	ID        int64           `json:"id"`
-	Balance   decimal.Decimal `json:"balance"`
-	Currency  string          `json:"currency"`
-	CreatedAt time.Time       `json:"created_at"`
-}
-
-func (a *AccountRepository) Insert(acc *Account) error {
-	query := `
-		INSERT INTO accounts (balance, currency)
-		VALUES ($1, $2)
-		RETURNING id, balance, currency, created_at`
-
-	args := []any{acc.Balance, acc.Currency}
-
-	return a.DB.QueryRow(query, args...).Scan(&acc.ID, &acc.Balance, &acc.Currency, &acc.CreatedAt)
-}
-
-func (a *AccountRepository) Get(id int64) (*Account, error) {
-	if id < 1 {
-		return nil, ErrRecordNotFound
-	}
-
-	query := `
-		SELECT id, balance, currency, created_at 
-		FROM accounts
-		WHERE id = $1`
-
-	var account Account
-
-	err := a.DB.QueryRow(query, id).Scan(
-		&account.ID,
-		&account.Balance,
-		&account.Currency,
-		&account.CreatedAt,
-	)
+func (t *TransferRepository) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount domain.Account, err error) {
+	sourceAccount, err = t.AddAccountBalance(ctx, sourceAccountID, sourceAccountAmount)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrRecordNotFound
-		default:
-			return nil, err
-		}
+		return
 	}
-	return &account, nil
+
+	targetAccount, err = t.AddAccountBalance(ctx, targetAccountID, targetAccountAmount)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
-func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]Account, error) {
+func (t *TransferRepository) TransferTx(ctx context.Context, arg domain.TransferTxParams) (*domain.TransferTxResult, error) {
+	var result domain.TransferTxResult
+
+	err := t.ExecTx(ctx, func() error {
+		var err error
+
+		if arg.SourceAccountID == arg.TargetAccountID {
+			return utils.ErrIdenticalAccount
+		}
+
+		if arg.SourceCurrency != arg.TargetCurrency {
+			convertedAmount, err := utils.CurrencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
+			if err != nil {
+				return utils.ErrCurrencyConvertion
+			}
+
+			arg.AmountToTransfer = convertedAmount
+		}
+
+		if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
+			return utils.ErrInsufficientBalance
+		}
+
+		result.SourceAccount, result.TargetAccount, err = t.AddMoney(
+			ctx,
+			arg.SourceAccountID,
+			arg.AmountToTransfer.Neg(),
+			arg.TargetAccountID,
+			arg.AmountToTransfer,
+		)
+		if err != nil {
+			return err
+		}
+
+		trasfer := domain.Transfer{
+			SourceAccountID: arg.SourceAccountID,
+			TargetAccountID: arg.TargetAccountID,
+			Amount:          arg.AmountToTransfer,
+			Currency:        arg.TargetCurrency,
+		}
+
+		result.Transfer, err = t.Insert(ctx, trasfer)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return &result, err
+}
+
+func (t *TransferRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
 	if sourceAccountID < 1 || targetAccountID < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -243,15 +251,15 @@ func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountI
 
 	args := []any{sourceAccountID, targetAccountID}
 
-	rows, err := a.DB.QueryContext(ctx, query, args...)
+	rows, err := t.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var accounts []Account
+	var accounts []domain.Account
 	for rows.Next() {
-		var account Account
+		var account domain.Account
 		if err := rows.Scan(
 			&account.ID,
 			&account.Balance,
@@ -270,7 +278,97 @@ func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountI
 	return accounts, nil
 }
 
-func (a *AccountRepository) Update(account *Account) error {
+type AccountRepository struct {
+	DB *sql.DB
+}
+
+type Account struct {
+	ID        int64           `json:"id"`
+	Balance   decimal.Decimal `json:"balance"`
+	Currency  string          `json:"currency"`
+	CreatedAt time.Time       `json:"created_at"`
+}
+
+func (a *AccountRepository) Insert(acc *domain.Account) error {
+	query := `
+		INSERT INTO accounts (balance, currency)
+		VALUES ($1, $2)
+		RETURNING id, balance, currency, created_at`
+
+	args := []any{acc.Balance, acc.Currency}
+
+	return a.DB.QueryRow(query, args...).Scan(&acc.ID, &acc.Balance, &acc.Currency, &acc.CreatedAt)
+}
+
+func (a *AccountRepository) Get(id int64) (*domain.Account, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, balance, currency, created_at 
+		FROM accounts
+		WHERE id = $1`
+
+	var account domain.Account
+
+	err := a.DB.QueryRow(query, id).Scan(
+		&account.ID,
+		&account.Balance,
+		&account.Currency,
+		&account.CreatedAt,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &account, nil
+}
+
+func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
+	if sourceAccountID < 1 || targetAccountID < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, balance, currency, created_at 
+		FROM accounts
+		WHERE id IN ($1, $2)`
+
+	args := []any{sourceAccountID, targetAccountID}
+
+	rows, err := a.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []domain.Account
+	for rows.Next() {
+		var account domain.Account
+		if err := rows.Scan(
+			&account.ID,
+			&account.Balance,
+			&account.Currency,
+			&account.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	if len(accounts) != 2 {
+		return nil, errors.New("one or more of the accounts does not exist")
+	}
+
+	return accounts, nil
+}
+
+func (a *AccountRepository) Update(account *domain.Account) error {
 	query := `
 		UPDATE accounts
 		SET balance = $1
@@ -313,7 +411,7 @@ func (a *AccountRepository) Delete(id int64) error {
 	return nil
 }
 
-func (a *AccountRepository) GetAll(ctx context.Context) ([]Account, error) {
+func (a *AccountRepository) GetAll(ctx context.Context) ([]domain.Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at
 		FROM accounts
@@ -330,9 +428,9 @@ func (a *AccountRepository) GetAll(ctx context.Context) ([]Account, error) {
 	}
 	defer rows.Close()
 
-	var accounts []Account
+	var accounts []domain.Account
 	for rows.Next() {
-		var account Account
+		var account domain.Account
 		if err := rows.Scan(
 			&account.ID,
 			&account.Balance,
