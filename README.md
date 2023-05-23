@@ -42,9 +42,9 @@ While the application is running, we can make requests to add, update, remove ac
 *   Make Transaction (POST) to `localhost:8080/transfer` with request body:
     ```
     {
-        "source_account_id": 3,
-        "target_account_id": 4,
-        "amount": 10
+        "source_account_id": "ac629895-57b4-46f2-bf11-1011fbb015c3",
+        "target_account_id": "5531dc5a-4dc2-4e34-97fc-78e4d88d0e22",
+        "amount": 15000
     }
     ```
 *   Get All Transactions (GET) to `localhost:8080/transactions`
