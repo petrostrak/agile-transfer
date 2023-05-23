@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
 	"github.com/petrostrak/agile-transfer/utils"
 	"github.com/shopspring/decimal"
@@ -72,11 +73,7 @@ func (t *TransferRepository) Insert(ctx context.Context, tx domain.Transfer) (do
 	return transfer, err
 }
 
-func (t *TransferRepository) Get(id int64) (*domain.Transfer, error) {
-	if id < 1 {
-		return nil, ErrRecordNotFound
-	}
-
+func (t *TransferRepository) Get(id uuid.UUID) (*domain.Transfer, error) {
 	query := `
 		SELECT id, source_account_id, target_account_id, amount, currency
 		FROM transfers
@@ -153,7 +150,7 @@ func (t *TransferRepository) ExecTx(ctx context.Context, fn func() error) error 
 	return tx.Commit()
 }
 
-func (t *TransferRepository) AddAccountBalance(ctx context.Context, id int64, amount decimal.Decimal) (domain.Account, error) {
+func (t *TransferRepository) AddAccountBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (domain.Account, error) {
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
@@ -173,7 +170,7 @@ func (t *TransferRepository) AddAccountBalance(ctx context.Context, id int64, am
 	return account, err
 }
 
-func (t *TransferRepository) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount domain.Account, err error) {
+func (t *TransferRepository) AddMoney(ctx context.Context, sourceAccountID uuid.UUID, sourceAccountAmount decimal.Decimal, targetAccountID uuid.UUID, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount domain.Account, err error) {
 	sourceAccount, err = t.AddAccountBalance(ctx, sourceAccountID, sourceAccountAmount)
 	if err != nil {
 		return
@@ -239,11 +236,7 @@ func (t *TransferRepository) TransferTx(ctx context.Context, arg domain.Transfer
 	return &result, err
 }
 
-func (t *TransferRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
-	if sourceAccountID < 1 || targetAccountID < 1 {
-		return nil, ErrRecordNotFound
-	}
-
+func (t *TransferRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at 
 		FROM accounts
@@ -283,7 +276,7 @@ type AccountRepository struct {
 }
 
 type Account struct {
-	ID        int64           `json:"id"`
+	ID        uuid.UUID       `json:"id"`
 	Balance   decimal.Decimal `json:"balance"`
 	Currency  string          `json:"currency"`
 	CreatedAt time.Time       `json:"created_at"`
@@ -300,11 +293,7 @@ func (a *AccountRepository) Insert(acc *domain.Account) error {
 	return a.DB.QueryRow(query, args...).Scan(&acc.ID, &acc.Balance, &acc.Currency, &acc.CreatedAt)
 }
 
-func (a *AccountRepository) Get(id int64) (*domain.Account, error) {
-	if id < 1 {
-		return nil, ErrRecordNotFound
-	}
-
+func (a *AccountRepository) Get(id uuid.UUID) (*domain.Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at 
 		FROM accounts
@@ -329,11 +318,7 @@ func (a *AccountRepository) Get(id int64) (*domain.Account, error) {
 	return &account, nil
 }
 
-func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
-	if sourceAccountID < 1 || targetAccountID < 1 {
-		return nil, ErrRecordNotFound
-	}
-
+func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
 	query := `
 		SELECT id, balance, currency, created_at 
 		FROM accounts
@@ -385,11 +370,7 @@ func (a *AccountRepository) Update(account *domain.Account) error {
 	)
 }
 
-func (a *AccountRepository) Delete(id int64) error {
-	if id < 1 {
-		return ErrRecordNotFound
-	}
-
+func (a *AccountRepository) Delete(id uuid.UUID) error {
 	query := `
 		DELETE FROM accounts
 		WHERE id = $1`

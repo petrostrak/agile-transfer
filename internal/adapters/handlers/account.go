@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/adapters/repository"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
 	"github.com/petrostrak/agile-transfer/internal/core/services"
@@ -56,11 +57,7 @@ func (a *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ReadIDParam(r)
-	if err != nil {
-		utils.NotFoundResponse(w, r)
-		return
-	}
+	id := utils.ReadIDParam(r)
 
 	account, err := a.svc.Get(id)
 	if err != nil {
@@ -74,7 +71,7 @@ func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var acc struct {
-		ID        int64           `json:"id"`
+		ID        uuid.UUID       `json:"id"`
 		Balance   decimal.Decimal `json:"balance"`
 		Currency  string          `json:"currency"`
 		CreatedAt string          `json:"created_at"`
@@ -91,11 +88,7 @@ func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ReadIDParam(r)
-	if err != nil {
-		utils.NotFoundResponse(w, r)
-		return
-	}
+	id := utils.ReadIDParam(r)
 
 	account, err := a.svc.Get(id)
 	if err != nil {
@@ -137,13 +130,9 @@ func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AccountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ReadIDParam(r)
-	if err != nil {
-		utils.NotFoundResponse(w, r)
-		return
-	}
+	id := utils.ReadIDParam(r)
 
-	err = a.svc.Delete(id)
+	err := a.svc.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -178,7 +167,7 @@ func (a *AccountHandler) GetAllAccounts(w http.ResponseWriter, r *http.Request) 
 	var accs []any
 	for _, account := range accounts {
 		var acc struct {
-			ID        int64           `json:"id"`
+			ID        uuid.UUID       `json:"id"`
 			Balance   decimal.Decimal `json:"balance"`
 			Currency  string          `json:"currency"`
 			CreatedAt string          `json:"created_at"`

@@ -10,6 +10,16 @@ and
 go run ./cmd/api
 ```
 
+To migrate up
+```
+migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose up
+```
+
+To migrate down
+```
+migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose down
+```
+
 While the application is running, we can make requests to add, update, remove accounts and make transactions between them.
 
 *   Create Account (POST) to `localhost:8080/accounts` with request body:

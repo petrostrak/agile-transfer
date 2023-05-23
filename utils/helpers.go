@@ -6,23 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type Envelope map[string]any
 
-func ReadIDParam(r *http.Request) (int64, error) {
-	params := chi.URLParamFromCtx(r.Context(), "id")
-	id, err := strconv.ParseInt(params, 10, 64)
-	if err != nil || id < 1 {
-		return 0, ErrInvalidIDParam
-	}
-
-	return id, nil
+func ReadIDParam(r *http.Request) uuid.UUID {
+	id := chi.URLParamFromCtx(r.Context(), "id")
+	return uuid.MustParse(id)
 }
 
 func WriteJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {

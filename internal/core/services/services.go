@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
 	"github.com/petrostrak/agile-transfer/internal/core/ports"
 	"github.com/shopspring/decimal"
@@ -22,7 +23,7 @@ func (a *AccountService) Insert(acc *domain.Account) error {
 	return a.repo.Insert(acc)
 }
 
-func (a *AccountService) Get(id int64) (*domain.Account, error) {
+func (a *AccountService) Get(id uuid.UUID) (*domain.Account, error) {
 	return a.repo.Get(id)
 }
 
@@ -30,7 +31,7 @@ func (a *AccountService) Update(account *domain.Account) error {
 	return a.repo.Update(account)
 }
 
-func (a *AccountService) Delete(id int64) error {
+func (a *AccountService) Delete(id uuid.UUID) error {
 	return a.repo.Delete(id)
 }
 
@@ -52,7 +53,7 @@ func (t *TransferService) Insert(ctx context.Context, tx domain.Transfer) (domai
 	return t.repo.Insert(ctx, tx)
 }
 
-func (t *TransferService) Get(id int64) (*domain.Transfer, error) {
+func (t *TransferService) Get(id uuid.UUID) (*domain.Transfer, error) {
 	return t.repo.Get(id)
 }
 
@@ -67,14 +68,14 @@ func (t *TransferService) TransferTx(ctx context.Context, arg domain.TransferTxP
 	return t.repo.TransferTx(ctx, arg)
 }
 
-func (t *TransferService) AddAccountBalance(ctx context.Context, id int64, amount decimal.Decimal) (domain.Account, error) {
+func (t *TransferService) AddAccountBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (domain.Account, error) {
 	return t.repo.AddAccountBalance(ctx, id, amount)
 }
 
-func (t *TransferService) AddMoney(ctx context.Context, sourceAccountID int64, sourceAccountAmount decimal.Decimal, targetAccountID int64, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount domain.Account, err error) {
+func (t *TransferService) AddMoney(ctx context.Context, sourceAccountID uuid.UUID, sourceAccountAmount decimal.Decimal, targetAccountID uuid.UUID, targetAccountAmount decimal.Decimal) (sourceAccount, targetAccount domain.Account, err error) {
 	return t.repo.AddMoney(ctx, sourceAccountID, sourceAccountAmount, targetAccountID, targetAccountAmount)
 }
 
-func (t *TransferService) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
+func (t *TransferService) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
 	return t.repo.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }

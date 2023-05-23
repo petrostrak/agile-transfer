@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/adapters/repository"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
 	"github.com/petrostrak/agile-transfer/internal/core/services"
@@ -28,8 +29,8 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 	defer cancel()
 
 	var input struct {
-		SourceAccountID int64           `json:"source_account_id"`
-		TargetAccountID int64           `json:"target_account_id"`
+		SourceAccountID uuid.UUID       `json:"source_account_id"`
+		TargetAccountID uuid.UUID       `json:"target_account_id"`
 		Amount          decimal.Decimal `json:"amount"`
 		Currency        string          `json:"currency"`
 	}
@@ -65,7 +66,7 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (t *TransferHandler) ValidAccounts(ctx context.Context, sourceAccountID, targetAccountID int64) ([]domain.Account, error) {
+func (t *TransferHandler) ValidAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
 	return t.svc.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }
 

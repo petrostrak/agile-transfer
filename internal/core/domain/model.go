@@ -3,27 +3,28 @@ package domain
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
 type Account struct {
-	ID        int64           `json:"id"`
+	ID        uuid.UUID       `json:"id"`
 	Balance   decimal.Decimal `json:"balance"`
 	Currency  string          `json:"currency"`
 	CreatedAt time.Time       `json:"created_at"`
 }
 
 type Transfer struct {
-	ID              int64           `json:"id"`
-	SourceAccountID int64           `json:"source_account_id"`
-	TargetAccountID int64           `json:"target_account_id"`
+	ID              uuid.UUID       `json:"id"`
+	SourceAccountID uuid.UUID       `json:"source_account_id"`
+	TargetAccountID uuid.UUID       `json:"target_account_id"`
 	Amount          decimal.Decimal `json:"amount"`
 	Currency        string          `json:"currency"`
 }
 
 type TransferTxParams struct {
-	SourceAccountID  int64           `json:"source_account_id"`
-	TargetAccountID  int64           `json:"target_account_id"`
+	SourceAccountID  uuid.UUID       `json:"source_account_id"`
+	TargetAccountID  uuid.UUID       `json:"target_account_id"`
 	SourceBalance    decimal.Decimal `json:"source_balance"`
 	AmountToTransfer decimal.Decimal `json:"amount_to_transfer"`
 	SourceCurrency   string          `json:"source_currency"`

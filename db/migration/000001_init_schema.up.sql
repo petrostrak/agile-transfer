@@ -1,16 +1,18 @@
 CREATE TABLE "accounts" (
-  "id" bigserial PRIMARY KEY,
+  "id" uuid DEFAULT gen_random_uuid(),
   "balance" decimal NOT NULL,
   "currency" varchar NOT NULL,
-  "created_at" timestamp NOT NULL DEFAULT (now())
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  PRIMARY KEY ("id")  
 );
 
 CREATE TABLE "transfers" (
-  "id" bigserial PRIMARY KEY,
-  "source_account_id" bigint NOT NULL,
-  "target_account_id" bigint NOT NULL,
+  "id" uuid DEFAULT gen_random_uuid(),
+  "source_account_id" uuid NOT NULL,
+  "target_account_id" uuid NOT NULL,
   "amount" decimal NOT NULL,
-  "currency" varchar NOT NULL
+  "currency" varchar NOT NULL,
+  PRIMARY KEY ("id")  
 );
 
 ALTER TABLE "transfers" ADD FOREIGN KEY ("source_account_id") REFERENCES "accounts" ("id");
