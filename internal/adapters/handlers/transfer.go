@@ -38,10 +38,12 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 	err := utils.ReadJSON(w, r, &input)
 	if err != nil {
 		utils.BadRequestResponse(w, r, err)
+		return
 	}
 
 	accounts, err := t.service.ValidateAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
 	if err != nil {
+		utils.BadRequestResponse(w, r, err)
 		return
 	}
 
