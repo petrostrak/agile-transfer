@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
 	"github.com/petrostrak/agile-transfer/internal/core/ports"
+	"github.com/petrostrak/agile-transfer/utils"
 	"github.com/shopspring/decimal"
 )
 
@@ -65,6 +66,19 @@ func (t *TransferService) ExecTx(ctx context.Context, fn func() error) error {
 	return t.repo.ExecTx(ctx, fn)
 }
 func (t *TransferService) TransferTx(ctx context.Context, arg domain.TransferTxParams) (*domain.TransferTxResult, error) {
+	if arg.SourceAccountID == arg.TargetAccountID {
+		return nil, utils.ErrIdenticalAccount
+	}
+	if arg.SourceCurrency != arg.TargetCurrency {
+		convertedAmount, err := utils.CurrencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
+		if err != nil {
+			return nil, utils.ErrCurrencyConvertion
+		}
+		arg.AmountToTransfer = convertedAmount
+	}
+	if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
+		return nil, utils.ErrInsufficientBalance
+	}
 	return t.repo.TransferTx(ctx, arg)
 }
 

@@ -94,23 +94,6 @@ func (t *TransferHandler) TransferTx(ctx context.Context, arg domain.TransferTxP
 	err := t.svc.ExecTx(ctx, func() error {
 		var err error
 
-		if arg.SourceAccountID == arg.TargetAccountID {
-			return utils.ErrIdenticalAccount
-		}
-
-		if arg.SourceCurrency != arg.TargetCurrency {
-			convertedAmount, err := utils.CurrencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
-			if err != nil {
-				return utils.ErrCurrencyConvertion
-			}
-
-			arg.AmountToTransfer = convertedAmount
-		}
-
-		if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
-			return utils.ErrInsufficientBalance
-		}
-
 		result.SourceAccount, result.TargetAccount, err = t.svc.AddMoney(
 			ctx,
 			arg.SourceAccountID,
