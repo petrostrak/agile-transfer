@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/petrostrak/agile-transfer/internal/core/domain"
-	"github.com/petrostrak/agile-transfer/utils"
 	"github.com/shopspring/decimal"
 )
 
@@ -190,23 +189,6 @@ func (t *TransferRepository) TransferTx(ctx context.Context, arg domain.Transfer
 	err := t.ExecTx(ctx, func() error {
 		var err error
 
-		if arg.SourceAccountID == arg.TargetAccountID {
-			return utils.ErrIdenticalAccount
-		}
-
-		if arg.SourceCurrency != arg.TargetCurrency {
-			convertedAmount, err := utils.CurrencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
-			if err != nil {
-				return utils.ErrCurrencyConvertion
-			}
-
-			arg.AmountToTransfer = convertedAmount
-		}
-
-		if arg.SourceBalance.LessThan(arg.AmountToTransfer) {
-			return utils.ErrInsufficientBalance
-		}
-
 		result.SourceAccount, result.TargetAccount, err = t.AddMoney(
 			ctx,
 			arg.SourceAccountID,
@@ -265,7 +247,7 @@ func (t *TransferRepository) ValidateAccounts(ctx context.Context, sourceAccount
 	}
 
 	if len(accounts) != 2 {
-		return nil, errors.New("one or more of the accounts does not exist")
+		return nil, errors.New("one or more of the accounts given does not exist")
 	}
 
 	return accounts, nil
@@ -316,41 +298,6 @@ func (a *AccountRepository) Get(id uuid.UUID) (*domain.Account, error) {
 		}
 	}
 	return &account, nil
-}
-
-func (a *AccountRepository) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
-	query := `
-		SELECT id, balance, currency, created_at 
-		FROM accounts
-		WHERE id IN ($1, $2)`
-
-	args := []any{sourceAccountID, targetAccountID}
-
-	rows, err := a.DB.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var accounts []domain.Account
-	for rows.Next() {
-		var account domain.Account
-		if err := rows.Scan(
-			&account.ID,
-			&account.Balance,
-			&account.Currency,
-			&account.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		accounts = append(accounts, account)
-	}
-
-	if len(accounts) != 2 {
-		return nil, errors.New("one or more of the accounts does not exist")
-	}
-
-	return accounts, nil
 }
 
 func (a *AccountRepository) Update(account *domain.Account) error {

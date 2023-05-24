@@ -66,9 +66,6 @@ func (t *TransferService) ExecTx(ctx context.Context, fn func() error) error {
 	return t.repo.ExecTx(ctx, fn)
 }
 func (t *TransferService) TransferTx(ctx context.Context, arg domain.TransferTxParams) (*domain.TransferTxResult, error) {
-	if arg.SourceAccountID == arg.TargetAccountID {
-		return nil, utils.ErrIdenticalAccount
-	}
 	if arg.SourceCurrency != arg.TargetCurrency {
 		convertedAmount, err := utils.CurrencyConvertion(arg.SourceCurrency, arg.TargetCurrency, arg.AmountToTransfer)
 		if err != nil {
@@ -91,5 +88,8 @@ func (t *TransferService) AddMoney(ctx context.Context, sourceAccountID uuid.UUI
 }
 
 func (t *TransferService) ValidateAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
+	if sourceAccountID == targetAccountID {
+		return nil, utils.ErrIdenticalAccount
+	}
 	return t.repo.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }

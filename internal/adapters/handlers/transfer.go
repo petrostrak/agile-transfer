@@ -40,7 +40,7 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 		utils.BadRequestResponse(w, r, err)
 	}
 
-	accounts, err := t.ValidAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
+	accounts, err := t.svc.ValidateAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
 	if err != nil {
 		return
 	}
@@ -64,10 +64,6 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		utils.ServerErrorResponse(w, r, err)
 	}
-}
-
-func (t *TransferHandler) ValidAccounts(ctx context.Context, sourceAccountID, targetAccountID uuid.UUID) ([]domain.Account, error) {
-	return t.svc.ValidateAccounts(ctx, sourceAccountID, targetAccountID)
 }
 
 func (t *TransferHandler) GetAllTransfers(w http.ResponseWriter, r *http.Request) {
