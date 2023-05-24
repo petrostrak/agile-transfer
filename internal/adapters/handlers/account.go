@@ -16,7 +16,7 @@ import (
 )
 
 type AccountHandler struct {
-	svc services.AccountService
+	service services.AccountService
 }
 
 func NewAccountHandler(accountService services.AccountService) *AccountHandler {
@@ -41,7 +41,7 @@ func (a *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		Currency: input.Currency,
 	}
 
-	err = a.svc.Insert(account)
+	err = a.service.Insert(account)
 	if err != nil {
 		utils.ServerErrorResponse(w, r, err)
 		return
@@ -59,7 +59,7 @@ func (a *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	id := utils.ReadIDParam(r)
 
-	account, err := a.svc.Get(id)
+	account, err := a.service.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -90,7 +90,7 @@ func (a *AccountHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	id := utils.ReadIDParam(r)
 
-	account, err := a.svc.Get(id)
+	account, err := a.service.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -117,7 +117,7 @@ func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		account.Currency = *input.Currency
 	}
 
-	err = a.svc.Update(account)
+	err = a.service.Update(account)
 	if err != nil {
 		utils.ServerErrorResponse(w, r, err)
 		return
@@ -132,7 +132,7 @@ func (a *AccountHandler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 func (a *AccountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	id := utils.ReadIDParam(r)
 
-	err := a.svc.Delete(id)
+	err := a.service.Delete(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -153,7 +153,7 @@ func (a *AccountHandler) GetAllAccounts(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
 
-	accounts, err := a.svc.GetAll(ctx)
+	accounts, err := a.service.GetAll(ctx)
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):

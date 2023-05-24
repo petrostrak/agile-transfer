@@ -15,7 +15,7 @@ import (
 )
 
 type TransferHandler struct {
-	svc services.TransferService
+	service services.TransferService
 }
 
 func NewTransferHandler(transferService services.TransferService) *TransferHandler {
@@ -40,7 +40,7 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 		utils.BadRequestResponse(w, r, err)
 	}
 
-	accounts, err := t.svc.ValidateAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
+	accounts, err := t.service.ValidateAccounts(ctx, input.SourceAccountID, input.TargetAccountID)
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 		AmountToTransfer: input.Amount,
 	}
 
-	result, err := t.svc.TransferTx(ctx, arg)
+	result, err := t.service.TransferTx(ctx, arg)
 	if err != nil {
 		utils.BadRequestResponse(w, r, err)
 		return
@@ -67,7 +67,7 @@ func (t *TransferHandler) CreateTransfer(w http.ResponseWriter, r *http.Request)
 }
 
 func (t *TransferHandler) GetAllTransfers(w http.ResponseWriter, r *http.Request) {
-	transfers, err := t.svc.GetAll()
+	transfers, err := t.service.GetAll()
 	if err != nil {
 		switch {
 		case errors.Is(err, repository.ErrRecordNotFound):
@@ -87,10 +87,10 @@ func (t *TransferHandler) GetAllTransfers(w http.ResponseWriter, r *http.Request
 func (t *TransferHandler) TransferTx(ctx context.Context, arg domain.TransferTxParams) (*domain.TransferTxResult, error) {
 	var result domain.TransferTxResult
 
-	err := t.svc.ExecTx(ctx, func() error {
+	err := t.service.ExecTx(ctx, func() error {
 		var err error
 
-		result.SourceAccount, result.TargetAccount, err = t.svc.AddMoney(
+		result.SourceAccount, result.TargetAccount, err = t.service.AddMoney(
 			ctx,
 			arg.SourceAccountID,
 			arg.AmountToTransfer.Neg(),
@@ -108,7 +108,7 @@ func (t *TransferHandler) TransferTx(ctx context.Context, arg domain.TransferTxP
 			Currency:        arg.TargetCurrency,
 		}
 
-		result.Transfer, err = t.svc.Insert(ctx, trasfer)
+		result.Transfer, err = t.service.Insert(ctx, trasfer)
 		if err != nil {
 			return err
 		}
