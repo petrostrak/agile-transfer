@@ -12,7 +12,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var ErrRecordNotFound = errors.New("record not Found")
+var (
+	ErrRecordNotFound = errors.New("record not Found")
+	POSTGRES_DSN      = "postgres://postgres:password@localhost/agile_transfer?sslmode=disable"
+)
 
 type PostgresRepository struct {
 	*AccountRepository
@@ -20,7 +23,7 @@ type PostgresRepository struct {
 }
 
 func NewPostgressRepository() *PostgresRepository {
-	dsn := "postgres://postgres:password@localhost/agile_transfer?sslmode=disable"
+	dsn := POSTGRES_DSN
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil
