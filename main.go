@@ -18,6 +18,8 @@ import (
 var (
 	accountService  *services.AccountService
 	transferService *services.TransferService
+	accountHandler  *handlers.AccountHandler
+	transferHandler *handlers.TransferHandler
 )
 
 func main() {
@@ -26,6 +28,8 @@ func main() {
 	store := repository.NewPostgressRepository()
 	accountService = services.NewAccountService(store.AccountRepository)
 	transferService = services.NewTransferService(store.TransferRepository)
+	accountHandler = handlers.NewAccountHandler(*accountService)
+	transferHandler = handlers.NewTransferHandler(*transferService)
 
 	srv := &http.Server{
 		Addr:        fmt.Sprintf(":%d", 8080),
@@ -46,9 +50,6 @@ func Routes() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	accountHandler := handlers.NewAccountHandler(*accountService)
-	transferHandler := handlers.NewTransferHandler(*transferService)
 
 	r.Route("/accounts", func(r chi.Router) {
 		r.Get("/", accountHandler.GetAllAccounts)
