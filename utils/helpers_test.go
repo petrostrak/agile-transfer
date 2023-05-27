@@ -2,14 +2,47 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
-func TestHumanDate(t *testing.T) {
+func Test_ReadIDParams(t *testing.T) {
+	testCases := []struct {
+		ID       string
+		expected uuid.UUID
+	}{
+		{"121f03cd-ce8c-447d-8747-fb8cb7aa3a52", uuid.MustParse("121f03cd-ce8c-447d-8747-fb8cb7aa3a52")},
+		{"2f0141f8-f325-4b15-9973-e7b34852e298", uuid.MustParse("2f0141f8-f325-4b15-9973-e7b34852e298")},
+		{"3659fbd7-7ba2-4151-95a2-b977ebf79307", uuid.MustParse("3659fbd7-7ba2-4151-95a2-b977ebf79307")},
+	}
+
+	for _, tt := range testCases {
+		var req *http.Request
+		req, _ = http.NewRequest("GET", "/", nil)
+		chiCtx := chi.NewRouteContext()
+		chiCtx.URLParams.Add("id", tt.ID)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, chiCtx))
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+		handler.ServeHTTP(rr, req)
+
+		result := ReadIDParam(req)
+
+		if result != tt.expected {
+			t.Errorf("Expected %v but got %v", tt.expected, result)
+		}
+	}
+}
+
+func Test_HumanDate(t *testing.T) {
 	testCases := []struct {
 		inputTime time.Time
 		expected  string
