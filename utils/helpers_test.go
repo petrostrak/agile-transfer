@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -21,5 +23,19 @@ func TestHumanDate(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("Expected %v but got %v", tt.expected, result)
 		}
+	}
+}
+
+func Test_WriteJSON(t *testing.T) {
+
+	rr := httptest.NewRecorder()
+	payload := make(map[string]any)
+	payload["foo"] = false
+
+	headers := make(http.Header)
+	headers.Add("FOO", "BAR")
+	err := WriteJSON(rr, http.StatusOK, payload, headers)
+	if err != nil {
+		t.Errorf("failed to write JSON: %v", err)
 	}
 }

@@ -20,19 +20,24 @@ func ReadIDParam(r *http.Request) uuid.UUID {
 	return uuid.MustParse(id)
 }
 
-func WriteJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
-	js, err := json.MarshalIndent(data, "", "\t")
+func WriteJSON(w http.ResponseWriter, status int, data any, headers ...http.Header) error {
+	out, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	for key, value := range headers {
-		w.Header()[key] = value
+	if len(headers) > 0 {
+		for key, value := range headers[0] {
+			w.Header()[key] = value
+		}
 	}
 
-	w.Header().Set("Content-Type", "Application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(js)
+	_, err = w.Write(out)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
