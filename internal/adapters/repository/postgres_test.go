@@ -272,3 +272,15 @@ func Test_PostgresDBRepoAddAccountBalance(t *testing.T) {
 		t.Errorf("wrong balance; wanted 200_000 but got %v", account.Balance)
 	}
 }
+
+func Test_PostgresDBRepoValidateAccounts(t *testing.T) {
+	accounts, _ := testRepo.AccountRepository.GetAll(context.Background())
+	accounts, err := testRepo.TransferRepository.ValidateAccounts(context.Background(), accounts[0].ID, accounts[1].ID)
+	if err != nil {
+		t.Errorf("error validating accounts: %s", err)
+	}
+
+	if len(accounts) != 2 {
+		t.Errorf("should have 2 accounts, instead got %d", len(accounts))
+	}
+}
