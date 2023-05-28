@@ -1,4 +1,4 @@
-//go:build integration
+// go:build integration
 
 package repository
 
@@ -220,9 +220,10 @@ func Test_PostgresDBRepoInsertTransfer(t *testing.T) {
 	_ = testRepo.AccountRepository.Insert(&testAccount)
 
 	accounts, _ := testRepo.AccountRepository.GetAll(context.Background())
+	testAccountID = accounts[0].ID
 
 	testTransfer := domain.Transfer{
-		SourceAccountID: accounts[0].ID,
+		SourceAccountID: testAccountID,
 		TargetAccountID: accounts[1].ID,
 		Amount:          decimal.NewFromInt(5400),
 		Currency:        "EUR",
@@ -258,5 +259,16 @@ func Test_PostgresDBRepoGetTransfer(t *testing.T) {
 
 	if transfer.Currency != "EUR" {
 		t.Errorf("wrong transfer currency returned. expected 'EUR' but got %s", transfer.Currency)
+	}
+}
+
+func Test_PostgresDBRepoAddAccountBalance(t *testing.T) {
+	account, err := testRepo.TransferRepository.AddAccountBalance(context.Background(), testAccountID, decimal.NewFromInt(50000).Neg())
+	if err != nil {
+		t.Errorf("error adding account balance by id: %s", err)
+	}
+
+	if !account.Balance.Equal(decimal.NewFromInt(200000)) {
+		t.Errorf("wrong balance; wanted 200_000 but got %v", account.Balance)
 	}
 }
