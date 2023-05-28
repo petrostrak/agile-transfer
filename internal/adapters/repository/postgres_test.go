@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -126,5 +127,33 @@ func Test_PostgresDBRepoInsertAccount(t *testing.T) {
 	err := testRepo.AccountRepository.Insert(&testAccount)
 	if err != nil {
 		t.Errorf("insert account returned an error: %s", err)
+	}
+}
+
+func Test_PostgresDBRepoGetAllAccounts(t *testing.T) {
+	accounts, err := testRepo.AccountRepository.GetAll(context.Background())
+	if err != nil {
+		t.Errorf("all accounts report an errorL %s", err)
+	}
+
+	if len(accounts) != 1 {
+		t.Errorf("all accounts report wrong size; expected 1, but got %d", len(accounts))
+	}
+
+	testAccount := domain.Account{
+		Balance:   decimal.NewFromInt(150000),
+		Currency:  "EUR",
+		CreatedAt: time.Now(),
+	}
+
+	_ = testRepo.AccountRepository.Insert(&testAccount)
+
+	accounts, err = testRepo.AccountRepository.GetAll(context.Background())
+	if err != nil {
+		t.Errorf("all accounts report an errorL %s", err)
+	}
+
+	if len(accounts) != 2 {
+		t.Errorf("all accounts report wrong size after insert; expected 2, but got %d", len(accounts))
 	}
 }
