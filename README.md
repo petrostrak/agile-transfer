@@ -7,17 +7,27 @@ docker compose up -d
 ```
 and
 ```
-go run ./cmd/api
+make start
 ```
 
 To migrate up
 ```
-migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose up
+make migrate-up
 ```
 
 To migrate down
 ```
-migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose down
+make migrate-down
+```
+
+To run tests
+```
+make coverage
+```
+
+To run tests with integration
+```
+make coverage-integration
 ```
 
 While the application is running, we can make requests to add, update, remove accounts and make transactions between them.

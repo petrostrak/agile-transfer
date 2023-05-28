@@ -2,4 +2,10 @@ start:
 	go run main.go
 coverage:
 	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
-PHONY: start, coverage
+coverage-integration:
+	go test -tags=integration ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
+migrate-up:
+	migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose up
+migrate-down:
+	migrate -path db/migration -database "postgresql://postgres:password@localhost:5432/agile_transfer?sslmode=disable" -verbose down
+PHONY: start, coverage, coverage-integration
