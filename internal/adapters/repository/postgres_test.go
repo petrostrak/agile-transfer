@@ -245,3 +245,18 @@ func Test_PostgresDBRepoGetAllTransfers(t *testing.T) {
 		t.Errorf("all transfers report wrong size; expected 1, but got %d", len(transfers))
 	}
 }
+
+func Test_PostgresDBRepoGetTransfer(t *testing.T) {
+	transfer, err := testRepo.TransferRepository.Get(testTransferID)
+	if err != nil {
+		t.Errorf("error getting transfer by id: %s", err)
+	}
+
+	if !transfer.Amount.Equal(decimal.NewFromInt(5400)) {
+		t.Errorf("wrong transfer amount returned. expected 'EUR' but got %s", transfer.Amount)
+	}
+
+	if transfer.Currency != "EUR" {
+		t.Errorf("wrong transfer currency returned. expected 'EUR' but got %s", transfer.Currency)
+	}
+}
