@@ -194,3 +194,15 @@ func Test_PostgresDBRepoUpdateAccount(t *testing.T) {
 		t.Errorf("expected updated record to have 500000 balance and RUB currency, but got %v and %s", account.Balance, account.Currency)
 	}
 }
+
+func Test_PostgresDBRepoDeleteAccount(t *testing.T) {
+	err := testRepo.AccountRepository.Delete(testID)
+	if err != nil {
+		t.Errorf("error deleting account: %s", err)
+	}
+
+	_, err = testRepo.AccountRepository.Get(testID)
+	if err == nil {
+		t.Errorf("got account %v, which should have been deleted", testID)
+	}
+}
