@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 
 	options := dockertest.RunOptions{
 		Repository: "postgres",
-		Tag:        "14",
+		Tag:        "14.5",
 		Env: []string{
 			"POSTGRES_USER=" + user,
 			"POSTGRES_PASSWORD=" + password,
@@ -50,7 +50,8 @@ func TestMain(m *testing.M) {
 			},
 		},
 	}
-	resource, err := pool.RunWithOptions(&options)
+
+	resource, err = pool.RunWithOptions(&options)
 	if err != nil {
 		_ = pool.Purge(resource)
 		log.Fatalf("could not start resource: %s", err)
@@ -69,6 +70,39 @@ func TestMain(m *testing.M) {
 		log.Fatalf("could not connect to DB: %s", err)
 	}
 
+	err = createTables()
+	if err != nil {
+		log.Fatalf("error creating tables: %s", err)
+	}
+
 	code := m.Run()
+
+	if err := pool.Purge(resource); err != nil {
+		log.Fatalf("could not purge resource: %s", err)
+	}
+
 	os.Exit(code)
+}
+
+func createTables() error {
+	tableSQL, err := os.ReadFile("./testdata/init_schema.sql")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	_, err = testDB.Exec(string(tableSQL))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func Test_PingDB(t *testing.T) {
+	err := testDB.Ping()
+	if err != nil {
+		t.Error("cannot ping DB")
+	}
 }
