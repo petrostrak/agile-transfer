@@ -1,3 +1,5 @@
+//go:build integration
+
 package repository
 
 import (
@@ -34,7 +36,8 @@ var (
 )
 
 var (
-	testID = uuid.UUID{}
+	testAccountID  = uuid.UUID{}
+	testTransferID = uuid.UUID{}
 )
 
 func TestMain(m *testing.M) {
@@ -140,7 +143,7 @@ func Test_PostgresDBRepoGetAllAccounts(t *testing.T) {
 	if err != nil {
 		t.Errorf("all accounts report an errorL %s", err)
 	}
-	testID = accounts[0].ID
+	testAccountID = accounts[0].ID
 
 	if len(accounts) != 1 {
 		t.Errorf("all accounts report wrong size; expected 1, but got %d", len(accounts))
@@ -165,7 +168,7 @@ func Test_PostgresDBRepoGetAllAccounts(t *testing.T) {
 }
 
 func Test_PostgresDBRepoGetAccount(t *testing.T) {
-	account, err := testRepo.AccountRepository.Get(testID)
+	account, err := testRepo.AccountRepository.Get(testAccountID)
 	if err != nil {
 		t.Errorf("error getting account by id: %s", err)
 	}
@@ -180,7 +183,7 @@ func Test_PostgresDBRepoGetAccount(t *testing.T) {
 }
 
 func Test_PostgresDBRepoUpdateAccount(t *testing.T) {
-	account, _ := testRepo.AccountRepository.Get(testID)
+	account, _ := testRepo.AccountRepository.Get(testAccountID)
 	account.Balance = decimal.NewFromInt(500000)
 	account.Currency = "RUB"
 
@@ -189,21 +192,21 @@ func Test_PostgresDBRepoUpdateAccount(t *testing.T) {
 		t.Errorf("error updating account: %s", err)
 	}
 
-	account, _ = testRepo.AccountRepository.Get(testID)
+	account, _ = testRepo.AccountRepository.Get(testAccountID)
 	if !account.Balance.Equal(decimal.NewFromInt(500000)) || account.Currency != "RUB" {
 		t.Errorf("expected updated record to have 500000 balance and RUB currency, but got %v and %s", account.Balance, account.Currency)
 	}
 }
 
 func Test_PostgresDBRepoDeleteAccount(t *testing.T) {
-	err := testRepo.AccountRepository.Delete(testID)
+	err := testRepo.AccountRepository.Delete(testAccountID)
 	if err != nil {
 		t.Errorf("error deleting account: %s", err)
 	}
 
-	_, err = testRepo.AccountRepository.Get(testID)
+	_, err = testRepo.AccountRepository.Get(testAccountID)
 	if err == nil {
-		t.Errorf("got account %v, which should have been deleted", testID)
+		t.Errorf("got account %v, which should have been deleted", testAccountID)
 	}
 }
 
@@ -228,5 +231,17 @@ func Test_PostgresDBRepoInsertTransfer(t *testing.T) {
 	_, err := testRepo.TransferRepository.Insert(context.Background(), testTransfer)
 	if err != nil {
 		t.Errorf("insert transfer returned an error: %s", err)
+	}
+}
+
+func Test_PostgresDBRepoGetAllTransfers(t *testing.T) {
+	transfers, err := testRepo.TransferRepository.GetAll()
+	if err != nil {
+		t.Errorf("all transfers report an error: %s", err)
+	}
+	testTransferID = transfers[0].ID
+
+	if len(transfers) != 1 {
+		t.Errorf("all transfers report wrong size; expected 1, but got %d", len(transfers))
 	}
 }
