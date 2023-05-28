@@ -1,5 +1,3 @@
-//go:build integration
-
 package repository
 
 import (
@@ -206,5 +204,29 @@ func Test_PostgresDBRepoDeleteAccount(t *testing.T) {
 	_, err = testRepo.AccountRepository.Get(testID)
 	if err == nil {
 		t.Errorf("got account %v, which should have been deleted", testID)
+	}
+}
+
+func Test_PostgresDBRepoInsertTransfer(t *testing.T) {
+	testAccount := domain.Account{
+		Balance:   decimal.NewFromInt(250000),
+		Currency:  "USD",
+		CreatedAt: time.Now(),
+	}
+
+	_ = testRepo.AccountRepository.Insert(&testAccount)
+
+	accounts, _ := testRepo.AccountRepository.GetAll(context.Background())
+
+	testTransfer := domain.Transfer{
+		SourceAccountID: accounts[0].ID,
+		TargetAccountID: accounts[1].ID,
+		Amount:          decimal.NewFromInt(5400),
+		Currency:        "EUR",
+	}
+
+	_, err := testRepo.TransferRepository.Insert(context.Background(), testTransfer)
+	if err != nil {
+		t.Errorf("insert transfer returned an error: %s", err)
 	}
 }
