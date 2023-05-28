@@ -306,11 +306,11 @@ func (a *AccountRepository) Get(id uuid.UUID) (*domain.Account, error) {
 func (a *AccountRepository) Update(account *domain.Account) error {
 	query := `
 		UPDATE accounts
-		SET balance = $1
-		WHERE id = $2
+		SET balance = $1, currency = $2
+		WHERE id = $3
 		RETURNING id, balance, currency, created_at`
 
-	args := []any{account.Balance, account.ID}
+	args := []any{account.Balance, account.Currency, account.ID}
 
 	return a.DB.QueryRow(query, args...).Scan(
 		&account.ID,

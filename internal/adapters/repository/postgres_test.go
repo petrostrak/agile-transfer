@@ -178,3 +178,19 @@ func Test_PostgresDBRepoGetAccount(t *testing.T) {
 		t.Errorf("wrong account balance returned. expected 150000 but got %v", account.Balance)
 	}
 }
+
+func Test_PostgresDBRepoUpdateAccount(t *testing.T) {
+	account, _ := testRepo.AccountRepository.Get(testID)
+	account.Balance = decimal.NewFromInt(500000)
+	account.Currency = "RUB"
+
+	err := testRepo.AccountRepository.Update(account)
+	if err != nil {
+		t.Errorf("error updating account: %s", err)
+	}
+
+	account, _ = testRepo.AccountRepository.Get(testID)
+	if !account.Balance.Equal(decimal.NewFromInt(500000)) || account.Currency != "RUB" {
+		t.Errorf("expected updated record to have 500000 balance and RUB currency, but got %v and %s", account.Balance, account.Currency)
+	}
+}
