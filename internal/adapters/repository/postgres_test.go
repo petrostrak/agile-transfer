@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -30,6 +31,10 @@ var (
 	pool     *dockertest.Pool
 	testDB   *sql.DB
 	testRepo PostgresRepository
+)
+
+var (
+	testID = uuid.UUID{}
 )
 
 func TestMain(m *testing.M) {
@@ -135,14 +140,15 @@ func Test_PostgresDBRepoGetAllAccounts(t *testing.T) {
 	if err != nil {
 		t.Errorf("all accounts report an errorL %s", err)
 	}
+	testID = accounts[0].ID
 
 	if len(accounts) != 1 {
 		t.Errorf("all accounts report wrong size; expected 1, but got %d", len(accounts))
 	}
 
 	testAccount := domain.Account{
-		Balance:   decimal.NewFromInt(150000),
-		Currency:  "EUR",
+		Balance:   decimal.NewFromInt(250000),
+		Currency:  "USD",
 		CreatedAt: time.Now(),
 	}
 
@@ -155,5 +161,20 @@ func Test_PostgresDBRepoGetAllAccounts(t *testing.T) {
 
 	if len(accounts) != 2 {
 		t.Errorf("all accounts report wrong size after insert; expected 2, but got %d", len(accounts))
+	}
+}
+
+func Test_PostgresDBRepoGetAccount(t *testing.T) {
+	account, err := testRepo.AccountRepository.Get(testID)
+	if err != nil {
+		t.Errorf("error getting account by id: %s", err)
+	}
+
+	if account.Currency != "EUR" {
+		t.Errorf("wrong account currency returned. expected 'EUR' but got %s", account.Currency)
+	}
+
+	if !account.Balance.Equal(decimal.NewFromInt(150000)) {
+		t.Errorf("wrong account balance returned. expected 150000 but got %v", account.Balance)
 	}
 }
