@@ -20,14 +20,24 @@ To migrate down
 make migrate-down
 ```
 
-To run tests
+To run tests (coverage)
 ```
 make coverage
 ```
 
-To run tests with integration
+To run tests with integration (coverage)
 ```
 make coverage-integration
+```
+
+To run tests
+```
+make test
+```
+
+To run tests with integration
+```
+make test-integration
 ```
 
 While the application is running, we can make requests to add, update, remove accounts and make transactions between them.
