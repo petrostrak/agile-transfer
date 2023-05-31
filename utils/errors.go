@@ -15,11 +15,10 @@ var (
 	ErrEmptyBody           = errors.New("body must not be empty")
 	ErrBadJSON             = errors.New("body contains badly-formed JSON")
 	ErrSingleJSON          = errors.New("body must only contain a single JSON value")
-
-	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 )
 
-func LogError(r *http.Request, err error) {
+func LogError(err error) {
+	logger := log.New(os.Stdout, "[ERROR] ", log.Ldate|log.Ltime)
 	logger.Println(err)
 }
 
@@ -28,13 +27,13 @@ func ErrorResponse(w http.ResponseWriter, r *http.Request, status int, message a
 
 	err := WriteJSON(w, status, env, nil)
 	if err != nil {
-		LogError(r, err)
+		LogError(err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	LogError(r, err)
+	LogError(err)
 	message := "the server encountered a problem and could not process your request"
 	ErrorResponse(w, r, http.StatusInternalServerError, message)
 }
